@@ -1,21 +1,12 @@
 /* ===========================================================
    NovaShop — Checkout-Modal
-   Ersetzt den früheren Ein-Klick-"Kauf" durch einen echten Bestellablauf:
-   Adresse, Zahlartauswahl (Demo), Bestellübersicht, Widerrufs-Checkbox,
-   Bestellbestätigung mit Bestellnummer. Gast-Bestellungen werden nicht
-   mehr stillschweigend verworfen, sondern unter einer Gast-ID gespeichert
-   (siehe Auth.addGuestOrder in auth.js). Weiterhin rein clientseitig ohne
-   echte Zahlungsabwicklung — siehe Hinweistext im Formular.
+   Sammelt Kontakt/Lieferadresse, validiert Bestand/Preise serverseitig
+   (nie dem Client vertrauen) und leitet zur Stripe-gehosteten Zahlungsseite
+   weiter. Die eigentliche Bestellung entsteht erst serverseitig, sobald
+   Stripe die Zahlung per Webhook bestätigt (siehe server/routes/webhooks.js).
    =========================================================== */
 (function () {
   "use strict";
-
-  const PAYMENT_METHODS = [
-    { id: "karte", label: "Kreditkarte" },
-    { id: "paypal", label: "PayPal" },
-    { id: "klarna", label: "Klarna" },
-    { id: "rechnung", label: "Rechnung" },
-  ];
 
   const MODAL_HTML = `
     <div class="modal modal--wide glass-strong checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-heading">
@@ -25,7 +16,7 @@
 
       <div id="checkout-view-form">
         <h2 id="checkout-heading">Bestellung abschließen</h2>
-        <p class="auth-form__sub">Demo-Checkout — es erfolgt keine echte Zahlungsabwicklung, deine Angaben bleiben nur lokal in diesem Browser gespeichert.</p>
+        <p class="auth-form__sub">Nach dem Absenden wirst du zur sicheren Stripe-Zahlungsseite weitergeleitet — deine Bestellung wird erst nach erfolgreicher Zahlung angelegt.</p>
 
         <form id="checkout-form" class="auth-form checkout-form" novalidate>
           <h3 class="checkout-form__heading">Kontakt</h3>
@@ -61,42 +52,21 @@
             </label>
           </div>
 
-          <h3 class="checkout-form__heading">Zahlungsart <span class="checkout-form__hint">(Demo-Auswahl)</span></h3>
-          <div class="checkout-payment" role="radiogroup" aria-label="Zahlungsart">
-            ${PAYMENT_METHODS.map(
-              (m, i) => `
-              <label class="checkout-payment__option">
-                <input type="radio" name="payment" value="${m.id}" ${i === 0 ? "checked" : ""}>
-                ${m.label}
-              </label>`
-            ).join("")}
-          </div>
-
           <h3 class="checkout-form__heading">Bestellübersicht</h3>
           <div class="checkout-summary" id="checkout-summary-items"></div>
           <div class="checkout-summary__totals" id="checkout-summary-totals"></div>
 
           <label class="checkout-consent">
             <input type="checkbox" id="checkout-consent" required>
-            <span>Ich habe die <a href="#" target="_blank" rel="noopener">Widerrufsbedingungen</a> gelesen und akzeptiere sie.</span>
+            <span>Ich habe die <a href="widerruf.html" target="_blank" rel="noopener">Widerrufsbedingungen</a> gelesen und akzeptiere sie.</span>
           </label>
 
           <p class="form-error" id="checkout-error" role="alert"></p>
           <button class="btn btn-primary btn-block" type="submit" id="checkout-submit">
             <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-lock"></use></svg>
-            <span id="checkout-submit-label">Zahlungspflichtig bestellen</span>
+            <span id="checkout-submit-label">Weiter zur Zahlung</span>
           </button>
         </form>
-      </div>
-
-      <div id="checkout-view-success" hidden>
-        <div class="admin-login__icon" style="margin:0 0 var(--space-4);">
-          <svg class="icon icon-lg" aria-hidden="true"><use href="#icon-check"></use></svg>
-        </div>
-        <h2>Danke für deine Bestellung!</h2>
-        <p class="auth-form__sub">Deine Bestellung <strong id="checkout-success-id"></strong> wurde aufgenommen und wird jetzt bearbeitet.</p>
-        <p id="checkout-success-note" class="auth-modal__note"></p>
-        <button class="btn btn-primary btn-block" type="button" id="checkout-success-close">Weiter einkaufen</button>
       </div>
     </div>`;
 
@@ -107,7 +77,6 @@
   document.body.appendChild(backdrop);
 
   const formView = document.getElementById("checkout-view-form");
-  const successView = document.getElementById("checkout-view-success");
   const form = document.getElementById("checkout-form");
   const errorEl = document.getElementById("checkout-error");
   const summaryItemsEl = document.getElementById("checkout-summary-items");
@@ -130,15 +99,13 @@
       <div class="checkout-summary__row"><span>Zwischensumme</span><span>${formatPrice(summary.subtotal)}</span></div>
       <div class="checkout-summary__row"><span>Versand</span><span>${summary.shippingFree ? "Kostenlos" : formatPrice(summary.shippingCost)}</span></div>
       <div class="checkout-summary__row checkout-summary__row--total"><span>Gesamt</span><strong>${formatPrice(summary.total)}</strong></div>`;
-    submitLabel.textContent = "Zahlungspflichtig bestellen — " + formatPrice(summary.total);
+    submitLabel.textContent = "Weiter zur Zahlung — " + formatPrice(summary.total);
     return summary;
   }
 
   function openModal() {
     if (Cart.getSummary().items.length === 0) return;
     lastFocusedEl = document.activeElement;
-    formView.hidden = false;
-    successView.hidden = true;
     errorEl.textContent = "";
     renderSummary();
     const user = Auth.getCurrentUser();
@@ -172,7 +139,7 @@
   });
 
   window.addEventListener("novashop:cart-change", () => {
-    if (backdrop.classList.contains("is-open") && !formView.hidden) {
+    if (backdrop.classList.contains("is-open")) {
       if (Cart.getSummary().items.length === 0) {
         closeModal();
       } else {
@@ -194,7 +161,6 @@
     const zip = document.getElementById("checkout-zip").value.trim();
     const city = document.getElementById("checkout-city").value.trim();
     const country = document.getElementById("checkout-country").value;
-    const payment = form.querySelector('input[name="payment"]:checked').value;
     const consent = document.getElementById("checkout-consent").checked;
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -208,41 +174,28 @@
     const submitBtn = document.getElementById("checkout-submit");
     submitBtn.disabled = true;
     try {
-      const orderPayload = {
-        items: summary.items.map((it) => ({ id: it.id, name: it.name, qty: it.qty, price: it.price })),
-        subtotal: summary.subtotal,
-        shippingCost: summary.shippingCost,
-        total: summary.total,
-        payment: PAYMENT_METHODS.find((m) => m.id === payment).label + " (Demo)",
-        address: { firstName, lastName, street, zip, city, country },
-      };
-
-      const user = Auth.getCurrentUser();
-      let order;
-      if (user) {
-        order = Auth.addOrder(user.email, orderPayload);
-      } else {
-        order = Auth.addGuestOrder({ name: firstName + " " + lastName, email }, orderPayload);
+      const res = await fetch("/api/checkout/create-session", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: summary.items.map((it) => ({ id: it.id, qty: it.qty })),
+          email,
+          address: { firstName, lastName, street, zip, city, country },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errorEl.textContent = data.error || "Die Bestellung konnte nicht gestartet werden. Bitte versuch es erneut.";
+        return;
       }
-
-      document.getElementById("checkout-success-id").textContent = order.id;
-      document.getElementById("checkout-success-note").textContent = user
-        ? "Du findest sie jederzeit unter „Mein Konto“ → Meine Bestellungen."
-        : "Da du nicht angemeldet warst, melde dich mit " + email + " an, um deine Bestellungen und den Status jederzeit einzusehen.";
-      // Reihenfolge wichtig: Erst die Erfolgsansicht zeigen, dann erst den Warenkorb leeren —
-      // sonst schließt der cart-change-Listener oben (leerer Warenkorb schließt das Formular)
-      // das Modal, bevor die Bestätigung überhaupt sichtbar wird.
-      form.reset();
-      formView.hidden = true;
-      successView.hidden = false;
-      Cart.clear();
-      setTimeout(() => document.getElementById("checkout-success-close").focus(), 50);
+      window.location.href = data.url;
+    } catch (err) {
+      errorEl.textContent = "Die Bestellung konnte nicht gestartet werden. Bitte versuch es erneut.";
     } finally {
       submitBtn.disabled = false;
     }
   });
-
-  document.getElementById("checkout-success-close").addEventListener("click", closeModal);
 
   window.Checkout = { open: openModal };
 })();

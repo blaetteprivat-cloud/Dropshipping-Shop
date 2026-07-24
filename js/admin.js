@@ -1,15 +1,11 @@
 /* ===========================================================
    NovaShop — Admin-Dashboard
-   Eigener, von Kundenkonten getrennter Login (Demo-Zugangsdaten).
-   Rein clientseitig — siehe Hinweis im Login-Formular.
+   Eigener, von Kundenkonten getrennter Login. Serverseitige Session
+   (siehe server/routes/admin.js) — Zugangsdaten liegen nur noch als
+   bcrypt-Hash in der Datenbank, nie im Quellcode.
    =========================================================== */
 (function () {
   "use strict";
-
-  const ADMIN_SESSION_KEY = "novashop_admin_session_v1";
-  const ADMIN_SESSION_TTL_MS = 30 * 60 * 1000; // Session läuft nach 30 Min. Inaktivität ab
-  const ADMIN_EMAIL = "admin@novashop.de";
-  const ADMIN_PASSWORD = "admin1234"; // Demo-Zugangsdaten — siehe Hinweis im Login-Formular, kein echter Server im Hintergrund.
 
   const loginView = document.getElementById("admin-login-view");
   const dashboardView = document.getElementById("admin-dashboard-view");
@@ -17,45 +13,35 @@
   const loginError = document.getElementById("admin-login-error");
   const logoutBtn = document.getElementById("admin-logout");
 
-  function isLoggedIn() {
+  let adminProducts = [];
+  let adminOrders = [];
+  let adminCustomers = [];
+
+  async function loadAdminData() {
     try {
-      const session = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || "null");
-      if (!session || !session.expiresAt || Date.now() > session.expiresAt) {
-        localStorage.removeItem(ADMIN_SESSION_KEY);
-        return false;
+      const [productsRes, ordersRes, customersRes] = await Promise.all([
+        fetch("/api/admin/products"),
+        fetch("/api/admin/orders"),
+        fetch("/api/admin/customers"),
+      ]);
+      adminProducts = productsRes.ok ? (await productsRes.json()).products : [];
+      adminOrders = ordersRes.ok ? (await ordersRes.json()).orders : [];
+      adminCustomers = customersRes.ok ? (await customersRes.json()).customers : [];
+    } catch (err) {
+      adminProducts = [];
+      adminOrders = [];
+      adminCustomers = [];
+      if (typeof showToast === "function") {
+        showToast("Daten konnten nicht geladen werden", "Bitte Seite neu laden und erneut versuchen.");
       }
-      return true;
-    } catch (e) {
-      return false;
     }
   }
 
-  function setLoggedIn(value) {
-    if (value) {
-      localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ expiresAt: Date.now() + ADMIN_SESSION_TTL_MS }));
-    } else {
-      localStorage.removeItem(ADMIN_SESSION_KEY);
-    }
-  }
-
-  /* Verlängert die Session bei Aktivität im Dashboard, statt nach 30 Min. mitten in der
-     Bearbeitung abzulaufen. */
-  function refreshSession() {
-    if (isLoggedIn()) setLoggedIn(true);
-  }
-  document.addEventListener("click", () => { if (!dashboardView.hidden) refreshSession(); });
-
-  async function checkAdminCredentials(email, password) {
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL) return false;
-    const hash = await Auth.hashPassword(password);
-    const expected = await Auth.hashPassword(ADMIN_PASSWORD);
-    return hash === expected;
-  }
-
-  function showDashboard() {
+  async function showDashboard() {
     loginView.hidden = true;
     dashboardView.hidden = false;
     logoutBtn.hidden = false;
+    await loadAdminData();
     renderAll();
   }
 
@@ -73,21 +59,27 @@
     const submitBtn = loginForm.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     try {
-      const ok = await checkAdminCredentials(email, password);
-      if (!ok) {
-        loginError.textContent = "E-Mail oder Passwort ist falsch.";
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        loginError.textContent = data.error || "E-Mail oder Passwort ist falsch.";
         return;
       }
-      setLoggedIn(true);
       loginForm.reset();
-      showDashboard();
+      await showDashboard();
+    } catch (err) {
+      loginError.textContent = "Verbindung zum Server fehlgeschlagen. Bitte versuch es erneut.";
     } finally {
       submitBtn.disabled = false;
     }
   });
 
-  logoutBtn.addEventListener("click", () => {
-    setLoggedIn(false);
+  logoutBtn.addEventListener("click", async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
     showLogin();
   });
 
@@ -121,13 +113,13 @@
 
   /* -------------------- Übersicht -------------------- */
   function renderOverview() {
-    const orders = Auth.getAllOrders();
+    const orders = adminOrders;
     const revenue = orders.reduce((sum, o) => sum + o.total, 0);
-    const products = ProductOverrides.getEffectiveProducts();
+    const products = adminProducts;
 
     document.getElementById("kpi-revenue").textContent = formatPrice(revenue);
     document.getElementById("kpi-orders").textContent = orders.length;
-    document.getElementById("kpi-customers").textContent = Auth.getAllUsers().length;
+    document.getElementById("kpi-customers").textContent = adminCustomers.length;
     document.getElementById("kpi-products").textContent = products.filter((p) => p.active).length;
 
     const tbody = document.querySelector("#recent-orders-table tbody");
@@ -143,7 +135,7 @@
       .map(
         (o) => `
       <tr>
-        <td><strong>${o.id}</strong></td>
+        <td><strong>${o.orderNumber}</strong></td>
         <td>${escapeHtml(o.customerName)}</td>
         <td>${formatDate(o.date)}</td>
         <td>${formatPrice(o.total)}</td>
@@ -202,7 +194,7 @@
       }
     }
     const bucketMap = new Map(buckets.map((b) => [b.key, b]));
-    Auth.getAllOrders().forEach((o) => {
+    adminOrders.forEach((o) => {
       const d = new Date(o.date);
       let key;
       if (granularity === "day") key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toDateString();
@@ -378,7 +370,7 @@
   /* -------------------- Produkte -------------------- */
   function renderProductsTable() {
     const tbody = document.querySelector("#products-table tbody");
-    const products = ProductOverrides.getEffectiveProducts();
+    const products = adminProducts;
     tbody.innerHTML = products
       .map(
         (p) => `
@@ -411,7 +403,7 @@
       .join("");
   }
 
-  document.querySelector("#products-table tbody")?.addEventListener("click", (e) => {
+  document.querySelector("#products-table tbody")?.addEventListener("click", async (e) => {
     const delBtn = e.target.closest("[data-delete-product]");
     if (!delBtn) return;
     if (delBtn.getAttribute("data-armed") !== "true") {
@@ -426,33 +418,59 @@
     }
     clearTimeout(delBtn._disarmTimer);
     const id = delBtn.getAttribute("data-delete-product");
-    const product = ProductOverrides.getEffectiveProduct(id);
-    ProductOverrides.deleteProduct(id);
+    const product = adminProducts.find((p) => p.id === id);
+    const res = await fetch("/api/admin/products/" + encodeURIComponent(id), { method: "DELETE" });
+    if (!res.ok) {
+      showToast("Löschen fehlgeschlagen", "Bitte versuch es erneut.");
+      return;
+    }
     showToast("Produkt gelöscht", product ? product.name + " wurde entfernt." : "");
+    await loadAdminData();
     renderProductsTable();
     renderOverview();
   });
 
-  document.querySelector("#products-table tbody")?.addEventListener("change", (e) => {
+  document.querySelector("#products-table tbody")?.addEventListener("change", async (e) => {
     const input = e.target.closest("[data-field]");
     if (!input) return;
     const id = input.getAttribute("data-id");
     const field = input.getAttribute("data-field");
     let value = parseFloat(input.value);
     if (Number.isNaN(value) || value < 0) value = 0;
-    ProductOverrides.setOverride(id, { [field]: value });
-    const product = ProductOverrides.getEffectiveProduct(id);
-    showToast(field === "price" ? "Preis aktualisiert" : "Lagerbestand aktualisiert", product ? product.name : "");
+    const res = await fetch("/api/admin/products/" + encodeURIComponent(id), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast("Fehler", data.error || "Aktualisierung fehlgeschlagen.");
+      return;
+    }
+    const idx = adminProducts.findIndex((p) => p.id === id);
+    if (idx !== -1) adminProducts[idx] = data.product;
+    showToast(field === "price" ? "Preis aktualisiert" : "Lagerbestand aktualisiert", data.product ? data.product.name : "");
     renderOverview();
   });
 
-  document.querySelector("#products-table tbody")?.addEventListener("click", (e) => {
+  document.querySelector("#products-table tbody")?.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-toggle-active]");
     if (!btn) return;
     const id = btn.getAttribute("data-toggle-active");
-    const current = ProductOverrides.getEffectiveProduct(id);
+    const current = adminProducts.find((p) => p.id === id);
     const nextActive = !current.active;
-    ProductOverrides.setOverride(id, { active: nextActive });
+    const res = await fetch("/api/admin/products/" + encodeURIComponent(id), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: nextActive }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast("Fehler", data.error || "Aktualisierung fehlgeschlagen.");
+      return;
+    }
+    const idx = adminProducts.findIndex((p) => p.id === id);
+    if (idx !== -1) adminProducts[idx] = data.product;
     btn.setAttribute("data-active", String(nextActive));
     btn.setAttribute("aria-pressed", String(nextActive));
     btn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${nextActive ? "icon-toggle-on" : "icon-toggle-off"}"></use></svg>${nextActive ? "Aktiv" : "Inaktiv"}`;
@@ -530,7 +548,7 @@
     if (e.key === "Escape" && addProductBackdrop?.classList.contains("is-open")) closeAddProductModal();
   });
 
-  addProductForm?.addEventListener("submit", (e) => {
+  addProductForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     addProductError.textContent = "";
     const name = document.getElementById("product-name").value.trim();
@@ -565,23 +583,31 @@
       return;
     }
 
-    const product = ProductOverrides.addCustomProduct({
-      name,
-      subtitle,
-      price,
-      oldPrice: oldPriceRaw ? oldPrice : null,
-      categories,
-      icon,
-      tint,
-      badge,
-      rating: 5,
-      reviews: 0,
-      stock,
-    });
-    closeAddProductModal();
-    renderProductsTable();
-    renderOverview();
-    showToast("Produkt hinzugefügt", product.name + " ist jetzt im Shop verfügbar.");
+    const submitBtn = addProductForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name, subtitle, price,
+          oldPrice: oldPriceRaw ? oldPrice : null,
+          categories, icon, tint, badge, stock,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        addProductError.textContent = data.error || "Produkt konnte nicht angelegt werden.";
+        return;
+      }
+      adminProducts.push(data.product);
+      closeAddProductModal();
+      renderProductsTable();
+      renderOverview();
+      showToast("Produkt hinzugefügt", data.product.name + " ist jetzt im Shop verfügbar.");
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 
   /* -------------------- Bestellungen -------------------- */
@@ -590,7 +616,7 @@
   function renderOrdersTable() {
     const tbody = document.querySelector("#orders-table tbody");
     const empty = document.getElementById("orders-empty");
-    const orders = Auth.getAllOrders();
+    const orders = adminOrders;
     if (orders.length === 0) {
       tbody.innerHTML = "";
       empty.hidden = false;
@@ -601,14 +627,15 @@
       .map(
         (o) => `
       <tr>
-        <td><strong>${o.id}</strong></td>
-        <td>${escapeHtml(o.customerName)}<br><span class="admin-product-cell__cat">${escapeHtml(o.customerEmail)}</span></td>
+        <td><strong>${o.orderNumber}</strong></td>
+        <td>${escapeHtml(o.customerName)}<br><span class="admin-product-cell__cat">${escapeHtml(o.customerEmail || "")}</span></td>
         <td>${formatDate(o.date)}</td>
         <td>${o.items.reduce((sum, it) => sum + it.qty, 0)} Artikel</td>
         <td>${formatPrice(o.total)}</td>
         <td>
-          <select class="admin-select" data-order-status="${o.id}" data-order-email="${escapeHtml(o.orderKey)}" aria-label="Status für Bestellung ${o.id}">
-            ${ORDER_STATUSES.map((s) => `<option value="${s}" ${s === (o.status || "In Bearbeitung") ? "selected" : ""}>${s}</option>`).join("")}
+          <select class="admin-select" data-order-status="${o.id}" aria-label="Status für Bestellung ${o.orderNumber}" ${o.status === "Zahlung ausstehend" || o.status === "Zahlung fehlgeschlagen" ? "disabled" : ""}>
+            ${ORDER_STATUSES.map((s) => `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
+            ${o.status === "Zahlung ausstehend" || o.status === "Zahlung fehlgeschlagen" ? `<option value="${o.status}" selected>${o.status}</option>` : ""}
           </select>
         </td>
       </tr>`
@@ -616,13 +643,23 @@
       .join("");
   }
 
-  document.querySelector("#orders-table tbody")?.addEventListener("change", (e) => {
+  document.querySelector("#orders-table tbody")?.addEventListener("change", async (e) => {
     const select = e.target.closest("[data-order-status]");
     if (!select) return;
-    const orderId = select.getAttribute("data-order-status");
-    const email = select.getAttribute("data-order-email");
-    Auth.updateOrderStatus(email, orderId, select.value);
-    showToast("Status aktualisiert", orderId + " ist jetzt „" + select.value + "“");
+    const id = select.getAttribute("data-order-status");
+    const res = await fetch(`/api/admin/orders/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: select.value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast("Fehler", data.error || "Status konnte nicht aktualisiert werden.");
+      return;
+    }
+    const idx = adminOrders.findIndex((o) => o.id === Number(id));
+    if (idx !== -1) adminOrders[idx] = Object.assign({}, adminOrders[idx], data.order);
+    showToast("Status aktualisiert", data.order.orderNumber + " ist jetzt „" + select.value + "“");
     renderOverview();
   });
 
@@ -630,7 +667,7 @@
   function renderCustomersTable() {
     const tbody = document.querySelector("#customers-table tbody");
     const empty = document.getElementById("customers-empty");
-    const users = Auth.getAllUsers();
+    const users = adminCustomers;
     if (users.length === 0) {
       tbody.innerHTML = "";
       empty.hidden = false;
@@ -638,18 +675,14 @@
     }
     empty.hidden = true;
     tbody.innerHTML = users
-      .map((u) => {
-        const orders = Auth.getOrders(u.email);
-        const spent = orders.reduce((sum, o) => sum + o.total, 0);
-        return `
+      .map((u) => `
         <tr>
           <td><strong>${escapeHtml(u.name)}</strong></td>
           <td>${escapeHtml(u.email)}</td>
-          <td>${formatDate(u.createdAt)}</td>
-          <td>${orders.length}</td>
-          <td>${formatPrice(spent)}</td>
-        </tr>`;
-      })
+          <td>${formatDate(u.created_at)}</td>
+          <td>${u.orderCount}</td>
+          <td>${formatPrice(u.totalSpent)}</td>
+        </tr>`)
       .join("");
   }
 
@@ -661,17 +694,11 @@
     renderCustomersTable();
   }
 
-  window.addEventListener("novashop:products-change", () => {
-    if (!dashboardView.hidden) renderAll();
-  });
-  window.addEventListener("novashop:auth-change", () => {
-    if (!dashboardView.hidden) renderAll();
-  });
-
   /* -------------------- Initialisierung -------------------- */
-  if (isLoggedIn()) {
-    showDashboard();
-  } else {
-    showLogin();
-  }
+  fetch("/api/admin/me")
+    .then((res) => {
+      if (res.ok) showDashboard();
+      else showLogin();
+    })
+    .catch(() => showLogin());
 })();

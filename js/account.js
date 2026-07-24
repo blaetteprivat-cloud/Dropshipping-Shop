@@ -67,31 +67,16 @@
           <button class="btn btn-primary btn-block" type="submit">Konto erstellen</button>
         </form>
 
-        <p class="auth-modal__note">Demo-Konto: Deine Angaben werden ausschließlich lokal in diesem Browser gespeichert — es gibt keinen echten Server im Hintergrund.</p>
+        <p class="auth-modal__note">Deine Angaben werden verschlüsselt gespeichert und ausschließlich für dein NovaShop-Konto verwendet.</p>
       </div>
 
       <div id="auth-view-verify-pending" hidden>
         <div class="admin-login__icon" style="margin:0 0 var(--space-4);">
           <svg class="icon icon-lg" aria-hidden="true"><use href="#icon-mail"></use></svg>
         </div>
-        <h2>Fast geschafft!</h2>
-        <p class="auth-form__sub">Wir haben eine Bestätigungsmail an <strong id="verify-pending-email"></strong> geschickt. Bitte bestätige deine Adresse, um dich anzumelden.</p>
-
-        <div class="mock-email">
-          <div class="mock-email__header">
-            <span class="mock-email__from">NovaShop <span>&lt;no-reply@novashop.de&gt;</span></span>
-            <span class="mock-email__to">An: <span id="mock-email-to"></span></span>
-          </div>
-          <p class="mock-email__subject">Bitte bestätige deine E-Mail-Adresse</p>
-          <div class="mock-email__body">
-            <p>Hallo <span id="mock-email-name"></span>,</p>
-            <p>schön, dass du bei NovaShop dabei bist! Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.</p>
-            <a class="btn btn-primary btn-sm" id="mock-email-verify-link" href="verify.html">E-Mail-Adresse bestätigen</a>
-            <p class="mock-email__footer">Falls du dich nicht registriert hast, kannst du diese Nachricht ignorieren.</p>
-          </div>
-        </div>
-
-        <p class="auth-modal__note">Demo-Hinweis: Da diese Seite ohne echten Mailserver läuft, zeigen wir den Inhalt der Bestätigungsmail hier direkt an, statt sie zu verschicken. Der Button oben simuliert den Klick auf den Link in deinem Postfach.</p>
+        <h2 id="verify-pending-heading">Fast geschafft!</h2>
+        <p class="auth-form__sub" id="verify-pending-message">Wir haben eine Bestätigungsmail an <strong id="verify-pending-email"></strong> geschickt. Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.</p>
+        <p class="auth-modal__note">Keine E-Mail erhalten? Prüfe auch deinen Spam-Ordner. Ein neuer Bestätigungslink wird automatisch angefordert, sobald du dich erneut anzumelden versuchst.</p>
         <button class="btn btn-ghost btn-block" type="button" id="verify-pending-back">Zurück zur Anmeldung</button>
       </div>
 
@@ -115,6 +100,26 @@
           <h3><svg class="icon" aria-hidden="true"><use href="#icon-receipt"></use></svg>Meine Bestellungen</h3>
           <div id="account-orders-list"></div>
         </div>
+
+        <div class="account-privacy">
+          <h3><svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>Konto &amp; Datenschutz</h3>
+          <div class="account-privacy__actions" id="account-privacy-actions">
+            <button class="btn btn-ghost" type="button" id="export-data-btn">Meine Daten exportieren</button>
+            <button class="btn btn-danger" type="button" id="delete-account-trigger">Konto löschen</button>
+          </div>
+          <form id="delete-account-form" class="auth-form" novalidate hidden>
+            <p class="auth-form__sub">Dein Konto wird anonymisiert und du wirst abgemeldet. Bestellungen bleiben aus gesetzlichen Aufbewahrungspflichten ohne Personenbezug gespeichert. Bitte bestätige mit deinem Passwort.</p>
+            <label for="delete-account-password">Passwort
+              <input type="password" id="delete-account-password" required autocomplete="current-password" placeholder="••••••••">
+            </label>
+            <p class="form-error" id="delete-account-error" role="alert"></p>
+            <div class="account-privacy__actions">
+              <button class="btn btn-ghost" type="button" id="delete-account-cancel">Abbrechen</button>
+              <button class="btn btn-danger" type="submit">Endgültig löschen</button>
+            </div>
+          </form>
+        </div>
+
         <button class="btn btn-ghost btn-block" type="button" id="logout-btn">
           <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-logout"></use></svg>
           Abmelden
@@ -154,6 +159,7 @@
     loginError.textContent = "";
     registerError.textContent = "";
     if (!verifyPendingView.hidden) resetToLoginTab();
+    resetDeleteAccountForm();
     if (lastFocusedEl) lastFocusedEl.focus();
   }
 
@@ -192,16 +198,21 @@
     });
   });
 
-  /* -------------------- Simulierte Bestätigungsmail anzeigen -------------------- */
-  function showVerifyPending({ email, name, verificationToken }) {
+  /* -------------------- "Bitte E-Mail bestätigen"-Hinweis -------------------- */
+  function showVerifyPending({ email, emailFailed }) {
     guestView.hidden = true;
     verifyPendingView.hidden = false;
     accountView.hidden = true;
     document.getElementById("verify-pending-email").textContent = email;
-    document.getElementById("mock-email-to").textContent = email;
-    document.getElementById("mock-email-name").textContent = name;
-    const link = "verify.html?email=" + encodeURIComponent(email) + "&token=" + encodeURIComponent(verificationToken);
-    document.getElementById("mock-email-verify-link").setAttribute("href", link);
+    const heading = document.getElementById("verify-pending-heading");
+    const message = document.getElementById("verify-pending-message");
+    if (emailFailed) {
+      heading.textContent = "Konto erstellt";
+      message.textContent = "Dein Konto wurde angelegt, aber die Bestätigungsmail an " + email + " konnte gerade nicht versendet werden. Fordere über \"Zurück zur Anmeldung\" → Anmeldeversuch einen neuen Link an.";
+    } else {
+      heading.textContent = "Fast geschafft!";
+      message.innerHTML = 'Wir haben eine Bestätigungsmail an <strong id="verify-pending-email">' + escapeHtml(email) + "</strong> geschickt. Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.";
+    }
   }
 
   document.getElementById("verify-pending-back").addEventListener("click", () => {
@@ -225,7 +236,7 @@
     } catch (err) {
       if (err.code === "EMAIL_NOT_VERIFIED") {
         try {
-          const resent = Auth.resendVerification(email);
+          const resent = await Auth.resendVerification(email);
           showVerifyPending(resent);
         } catch (resendErr) {
           loginError.textContent = resendErr.message;
@@ -293,6 +304,65 @@
     closeModal();
   });
 
+  /* -------------------- Daten exportieren -------------------- */
+  document.getElementById("export-data-btn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const blob = await Auth.exportData();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "novashop-daten.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast("Export fehlgeschlagen", err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* -------------------- Konto löschen -------------------- */
+  const privacyActions = document.getElementById("account-privacy-actions");
+  const deleteForm = document.getElementById("delete-account-form");
+  const deleteError = document.getElementById("delete-account-error");
+
+  function resetDeleteAccountForm() {
+    deleteForm.hidden = true;
+    deleteForm.reset();
+    deleteError.textContent = "";
+    privacyActions.hidden = false;
+  }
+
+  document.getElementById("delete-account-trigger").addEventListener("click", () => {
+    privacyActions.hidden = true;
+    deleteForm.hidden = false;
+    document.getElementById("delete-account-password").focus();
+  });
+
+  document.getElementById("delete-account-cancel").addEventListener("click", resetDeleteAccountForm);
+
+  deleteForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    deleteError.textContent = "";
+    const password = document.getElementById("delete-account-password").value;
+    const submitBtn = deleteForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await Auth.deleteAccount(password);
+      deleteForm.reset();
+      closeModal();
+      showToast("Konto gelöscht", "Dein Konto wurde anonymisiert. Auf Wiedersehen!");
+    } catch (err) {
+      deleteError.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
   /* -------------------- Ansicht rendern -------------------- */
   function initials(name) {
     return name
@@ -317,7 +387,7 @@
         return `
         <div class="order-card">
           <div class="order-card__top">
-            <span class="order-card__id">${order.id}</span>
+            <span class="order-card__id">${order.orderNumber}</span>
             <span class="order-card__date">${date}</span>
           </div>
           <p class="order-card__items">${itemsSummary}</p>
@@ -358,8 +428,8 @@
       <button type="button" class="notif-item${n.read ? "" : " notif-item--unread"}" data-notif-id="${n.id}">
         <span class="notif-item__icon"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-receipt"></use></svg></span>
         <span class="notif-item__body">
-          <span class="notif-item__title">${n.title}</span>
-          <span class="notif-item__message">${n.message}</span>
+          <span class="notif-item__title">${escapeHtml(n.title)}</span>
+          <span class="notif-item__message">${escapeHtml(n.message)}</span>
           <span class="notif-item__time">${timeAgo(n.date)}</span>
         </span>
       </button>`

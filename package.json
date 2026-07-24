@@ -1,0 +1,24 @@
+{
+  "name": "novashop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NovaShop – Node/Express-Backend für Produkte, Bestellungen, Nutzerkonten, Sessions, Stripe-Checkout, Brevo-E-Mail/Newsletter.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed-admin": "node scripts/seed-admin.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "better-sqlite3-session-store": "^0.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "helmet": "^8.3.0",
+    "morgan": "^1.11.0",
+    "stripe": "^16.12.0"
+  }
+}

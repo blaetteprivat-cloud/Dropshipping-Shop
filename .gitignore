@@ -3,4 +3,7 @@ node_modules/
 *.sqlite
 *.sqlite-journal
 *.sqlite3
+*.sqlite-shm
+*.sqlite-wal
 npm-debug.log*
+server_boot.log

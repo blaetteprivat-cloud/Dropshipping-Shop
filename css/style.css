@@ -247,6 +247,12 @@ html { scroll-behavior: smooth; }
 .btn-block { width: 100%; }
 .btn-sm { min-height: 40px; padding: 0 var(--space-4); font-size: 0.875rem; }
 
+.btn-danger {
+  background: var(--color-danger-strong);
+  color: #fff;
+}
+.btn-danger:hover { box-shadow: 0 10px 36px rgba(var(--color-danger-rgb), 0.5); }
+
 .btn-icon {
   display: inline-flex;
   align-items: center;
@@ -757,6 +763,7 @@ html { scroll-behavior: smooth; }
   max-width: 420px;
   max-height: min(640px, 90dvh);
   overflow-y: auto;
+  overflow-x: hidden;
   border-radius: var(--radius-xl);
   padding: var(--space-7) var(--space-6) var(--space-6);
   transform: translateY(16px) scale(0.97);
@@ -963,7 +970,8 @@ html { scroll-behavior: smooth; }
 .account-header__info span { display: block; font-size: 0.85rem; color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .account-orders h3,
-.account-notifications h3 {
+.account-notifications h3,
+.account-privacy h3 {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -971,7 +979,14 @@ html { scroll-behavior: smooth; }
   margin-bottom: var(--space-4);
 }
 .account-orders h3 .icon,
-.account-notifications h3 .icon { width: 18px; height: 18px; color: var(--color-primary); }
+.account-notifications h3 .icon,
+.account-privacy h3 .icon { width: 18px; height: 18px; color: var(--color-primary); }
+
+.account-privacy { margin-bottom: var(--space-6); }
+.account-privacy .btn { margin-bottom: var(--space-3); }
+.account-privacy__actions { display: flex; gap: var(--space-3); }
+.account-privacy__actions .btn-ghost { flex: 1; }
+.account-privacy__actions .btn-danger { flex: 1; }
 
 .account-notifications { margin-bottom: var(--space-6); }
 .notif-mark-all {

@@ -57,7 +57,7 @@
 <script src="js/auth.js"></script>
 <script src="js/cookie-consent.js"></script>
 <script>
-(function () {
+(async function () {
   "use strict";
   const params = new URLSearchParams(window.location.search);
   const email = params.get("email") || "";
@@ -90,7 +90,8 @@
     });
   } else {
     try {
-      const result = Auth.verifyEmail(email, token);
+      await Auth.ready;
+      const result = await Auth.verifyEmail(email, token);
       if (result.alreadyVerified) {
         setState({
           icon: "icon-shield-check",

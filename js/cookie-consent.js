@@ -1,8 +1,9 @@
 /* ===========================================================
    NovaShop — Cookie-/Speicher-Hinweis
-   NovaShop nutzt aktuell ausschließlich technisch notwendige Speicherung
-   (Warenkorb, Login-Status, Admin-Session) — kein Tracking, keine Analyse-
-   oder Marketing-Skripte. Dafür ist nach Art. 6 Abs. 1 lit. f DSGVO /
+   NovaShop nutzt aktuell ausschließlich technisch notwendige Speicherung:
+   ein httpOnly-Session-Cookie (Login/Admin-Session) sowie localStorage für
+   Warenkorb/Favoriten und diese Banner-Bestätigung — kein Tracking, keine
+   Analyse- oder Marketing-Skripte. Dafür ist nach Art. 6 Abs. 1 lit. f DSGVO /
    §25 Abs. 2 Nr. 2 TTDSG keine Einwilligung nötig, ein Hinweis-Banner
    sorgt trotzdem für Transparenz. Kommen später Analyse-/Marketing-Skripte
    dazu, muss dieser Hinweis um echte Opt-in-Regler erweitert werden, bevor
@@ -22,9 +23,9 @@
   banner.innerHTML = `
     <p>
       <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-shield-check"></use></svg>
-      Wir speichern nur technisch Notwendiges lokal in deinem Browser (Warenkorb, Anmeldestatus) —
+      Wir speichern nur technisch Notwendiges (Warenkorb, Anmeldestatus) —
       keine Tracking- oder Marketing-Cookies. Details in unserer
-      <a href="#">Datenschutzerklärung</a>.
+      <a href="datenschutz.html">Datenschutzerklärung</a>.
     </p>
     <button type="button" class="btn btn-primary btn-sm" id="cookie-banner-accept">Verstanden</button>
   `;

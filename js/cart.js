@@ -42,18 +42,30 @@
 
   function getItemsDetailed() {
     const state = readCart();
-    return Object.keys(state)
+    /* Der Produktkatalog lädt async vom Server (Products.ready). Bevor er da ist, liefert
+       getProductById() für JEDE id null — das darf NICHT als "Produkt gelöscht" missverstanden
+       und aus dem localStorage entfernt werden, sonst verliert der Nutzer bei jedem Seitenaufruf
+       mit kaltem Cache seinen ganzen Warenkorb. Erst nach vollständig geladenem Katalog wird
+       "nicht gefunden" tatsächlich als "existiert nicht mehr" gewertet und persistent entfernt. */
+    const catalogReady = typeof Products !== "undefined" && typeof Products.isReady === "function" ? Products.isReady() : true;
+    let pruned = false;
+    const items = Object.keys(state)
       .map((id) => {
-        const product =
-          typeof ProductOverrides !== "undefined"
-            ? ProductOverrides.getEffectiveProduct(id)
-            : typeof getProductById === "function"
-            ? getProductById(id)
-            : null;
-        if (!product) return null;
+        const product = typeof getProductById === "function" ? getProductById(id) : null;
+        if (!product) {
+          if (catalogReady) {
+            delete state[id];
+            pruned = true;
+          }
+          return null;
+        }
         return Object.assign({}, product, { qty: state[id] });
       })
       .filter(Boolean);
+    if (pruned && catalogReady) {
+      if (typeof localStorage !== "undefined") localStorage.setItem(CART_KEY, JSON.stringify(state));
+    }
+    return items;
   }
 
   function getSummary() {
@@ -67,9 +79,7 @@
   }
 
   function resolveProduct(productId) {
-    if (typeof ProductOverrides !== "undefined") return ProductOverrides.getEffectiveProduct(productId);
-    if (typeof getProductById === "function") return getProductById(productId);
-    return null;
+    return typeof getProductById === "function" ? getProductById(productId) : null;
   }
 
   function maxQtyFor(productId) {
@@ -84,7 +94,11 @@
     const max = maxQtyFor(productId);
     const next = Math.min((state[productId] || 0) + qty, max);
     const capped = next < (state[productId] || 0) + qty;
-    state[productId] = next;
+    if (next <= 0) {
+      delete state[productId];
+    } else {
+      state[productId] = next;
+    }
     writeCart(state);
     const summary = getSummary();
     if (capped) summary.cappedProductId = productId;
@@ -93,10 +107,10 @@
 
   function setQty(productId, qty) {
     const state = readCart();
-    if (!Number.isFinite(qty) || qty <= 0) {
+    const max = maxQtyFor(productId);
+    if (!Number.isFinite(qty) || qty <= 0 || max <= 0) {
       delete state[productId];
     } else {
-      const max = maxQtyFor(productId);
       state[productId] = Math.min(Math.floor(qty), max);
     }
     writeCart(state);

@@ -52,8 +52,13 @@
   /* Produktzahl kommt live aus dem Katalog statt als fixer Wert im Markup, damit sie nie von der
      Realität abweicht (z.B. wenn im Admin-Bereich Produkte hinzugefügt/entfernt werden). */
   const productCountEl = document.getElementById("stat-product-count");
-  if (productCountEl && typeof ProductOverrides !== "undefined") {
-    productCountEl.setAttribute("data-count", String(ProductOverrides.getEffectiveProducts().filter((p) => p.active).length));
+  if (productCountEl) {
+    Products.ready.then(() => {
+      productCountEl.setAttribute("data-count", String(Products.getAll().filter((p) => p.active).length));
+      // Falls der Zähler (IntersectionObserver weiter unten) schon vor Eintreffen der echten
+      // Produktzahl ausgelöst hat, hier erneut mit dem jetzt korrekten Wert animieren.
+      animateCount(productCountEl);
+    });
   }
 
   const statEls = document.querySelectorAll(".stats__num");
@@ -121,22 +126,24 @@
   /* -------------------- Produkt-Vorschau -------------------- */
   const productPreviewEl = document.getElementById("product-preview");
   function renderFeaturedProducts() {
-    if (!productPreviewEl || typeof ProductOverrides === "undefined") return;
-    const featured = ProductOverrides.getEffectiveProducts()
+    if (!productPreviewEl) return;
+    const featured = Products.getAll()
       .filter((p) => p.active && p.categories.includes("beliebt"))
       .slice(0, 8);
     productPreviewEl.innerHTML = featured.map(renderProductCard).join("");
   }
-  renderFeaturedProducts();
+  Products.ready.then(renderFeaturedProducts);
   window.addEventListener("novashop:products-change", renderFeaturedProducts);
 
   /* -------------------- Newsletter-Formular -------------------- */
   const newsletterForm = document.getElementById("newsletter-form");
   if (newsletterForm) {
-    newsletterForm.addEventListener("submit", (e) => {
+    newsletterForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const input = document.getElementById("newsletter-email");
+      const honeypot = document.getElementById("newsletter-website");
       const status = document.getElementById("newsletter-status");
+      const submitBtn = newsletterForm.querySelector('button[type="submit"]');
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailPattern.test(input.value.trim())) {
         status.textContent = "Bitte gib eine gültige E-Mail-Adresse ein.";
@@ -144,9 +151,28 @@
         input.focus();
         return;
       }
-      status.textContent = "Danke! Bitte bestätige deine Anmeldung über den Link in deiner Mailbox.";
-      status.setAttribute("data-state", "success");
-      newsletterForm.reset();
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch("/api/newsletter/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: input.value.trim(), website: honeypot ? honeypot.value : "" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          status.textContent = data.error || "Anmeldung fehlgeschlagen. Bitte versuch es später erneut.";
+          status.setAttribute("data-state", "error");
+          return;
+        }
+        status.textContent = "Danke! Bitte bestätige deine Anmeldung über den Link in deiner Mailbox.";
+        status.setAttribute("data-state", "success");
+        newsletterForm.reset();
+      } catch (err) {
+        status.textContent = "Anmeldung fehlgeschlagen. Bitte versuch es später erneut.";
+        status.setAttribute("data-state", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   }
 })();

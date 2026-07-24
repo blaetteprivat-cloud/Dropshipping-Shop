@@ -54,17 +54,18 @@ document.addEventListener("click", (e) => {
   if (addBtn) {
     if (addBtn.disabled) return;
     const id = addBtn.getAttribute("data-add-to-cart");
-    const product =
-      typeof ProductOverrides !== "undefined"
-        ? ProductOverrides.getEffectiveProduct(id)
-        : typeof getProductById === "function"
-        ? getProductById(id)
-        : null;
+    const product = typeof getProductById === "function" ? getProductById(id) : null;
     if (product && typeof product.stock === "number" && product.stock <= 0) return;
-    Cart.add(id, 1);
+    const before = (Cart.getSummary().items.find((i) => i.id === id) || {}).qty || 0;
+    const result = Cart.add(id, 1);
+    const after = (result.items.find((i) => i.id === id) || {}).qty || 0;
     addBtn.setAttribute("data-added", "1");
     setTimeout(() => addBtn.removeAttribute("data-added"), 900);
-    if (product) showToast("Zum Warenkorb hinzugefügt", product.name);
+    if (after === before) {
+      showToast("Maximale Menge erreicht", "Es ist nicht mehr Lagerbestand verfügbar.");
+    } else if (product) {
+      showToast("Zum Warenkorb hinzugefügt", product.name);
+    }
     return;
   }
   const favBtn = e.target.closest("[data-fav-toggle]");
@@ -90,4 +91,5 @@ function updateCartBadges() {
   });
 }
 document.addEventListener("DOMContentLoaded", updateCartBadges);
+Products.ready.then(updateCartBadges);
 window.addEventListener("novashop:cart-change", updateCartBadges);

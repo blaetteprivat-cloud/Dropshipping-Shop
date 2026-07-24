@@ -3,14 +3,15 @@
    Galerie, Produktinfos, Warenkorb-Panel, Kategorien-Sidebar,
    mobile Drawer und ähnliche Produkte.
    =========================================================== */
-(function () {
+(async function () {
   "use strict";
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const params = new URLSearchParams(window.location.search);
   const productId = params.get("id");
 
-  const product = ProductOverrides.getEffectiveProduct(productId) || ProductOverrides.getEffectiveProducts()[0];
+  await Products.ready;
+  const product = Products.getById(productId) || Products.getAll()[0];
   const primaryCategoryId = product ? (product.categories.find((c) => c !== "beliebt") || product.categories[0]) : "beliebt";
   const primaryCategory = CATEGORIES.find((c) => c.id === primaryCategoryId) || CATEGORIES[0];
 
@@ -36,7 +37,7 @@
   /* -------------------- Kategorien-Sidebar (führt zur Shop-Übersicht) -------------------- */
   const categoryListEl = document.getElementById("category-list");
   function countForCategory(catId) {
-    return ProductOverrides.getEffectiveProducts().filter((p) => p.active && p.categories.includes(catId)).length;
+    return Products.getAll().filter((p) => p.active && p.categories.includes(catId)).length;
   }
   categoryListEl.innerHTML = CATEGORIES.map(
     (cat) => `
@@ -58,9 +59,9 @@
     breadcrumbEl.innerHTML = `
       <a href="index.html">Startseite</a>
       <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
-      <a href="shop.html?cat=${primaryCategory.id}">${primaryCategory.label}</a>
+      <a href="shop.html?cat=${primaryCategory.id}">${escapeHtml(primaryCategory.label)}</a>
       <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
-      <span aria-current="page">${product.name}</span>`;
+      <span aria-current="page">${escapeHtml(product.name)}</span>`;
   }
 
   /* -------------------- Produktdetail rendern -------------------- */
@@ -176,10 +177,15 @@
     const addBtn = document.getElementById("detail-add-to-cart");
     if (addBtn) {
       addBtn.addEventListener("click", () => {
-        const before = qty;
+        const existingBefore = (Cart.getSummary().items.find((i) => i.id === product.id) || {}).qty || 0;
         const summary = Cart.add(product.id, qty);
         const inCart = (summary.items.find((i) => i.id === product.id) || {}).qty || 0;
-        showToast("Zum Warenkorb hinzugefügt", `${Math.min(before, inCart)} × ${product.name}`);
+        const actuallyAdded = inCart - existingBefore;
+        if (actuallyAdded <= 0) {
+          showToast("Maximale Menge erreicht", "Es ist nicht mehr Lagerbestand verfügbar.");
+        } else {
+          showToast("Zum Warenkorb hinzugefügt", `${actuallyAdded} × ${product.name}`);
+        }
       });
     }
     detailEl.querySelectorAll(".product-detail__thumb").forEach((thumb) => {
@@ -209,7 +215,7 @@
   const relatedSection = document.getElementById("related-section");
   const relatedGrid = document.getElementById("related-grid");
   if (product) {
-    const related = ProductOverrides.getEffectiveProducts()
+    const related = Products.getAll()
       .filter((p) => p.active && p.id !== product.id && p.categories.some((c) => product.categories.includes(c)))
       .slice(0, 4);
     if (related.length > 0) {

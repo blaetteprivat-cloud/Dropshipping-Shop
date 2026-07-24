@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bestellung bestätigt — NovaShop</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0908">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239c7a52'/%3E%3Cstop offset='1' stop-color='%23c2a06c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='6' fill='url(%23g)'/%3E%3Ctext x='12' y='16.5' font-family='sans-serif' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="5,13 10,18 19,7"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></symbol>
+  </defs>
+</svg>
+
+<header class="navbar">
+  <div class="container navbar__inner">
+    <a class="brand" href="index.html" aria-label="NovaShop Startseite">
+      <span class="brand__mark" aria-hidden="true">N</span>
+      NovaShop
+    </a>
+    <div class="navbar__actions">
+      <a class="btn btn-ghost" href="index.html">Zur Website</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="admin-login">
+    <div class="container">
+      <div class="admin-login__card glass-strong">
+        <div class="admin-login__icon" id="success-icon">
+          <svg class="icon icon-lg" aria-hidden="true"><use href="#icon-check"></use></svg>
+        </div>
+        <h1 id="success-heading">Einen Moment …</h1>
+        <p class="auth-form__sub" id="success-message">Wir prüfen deine Zahlung.</p>
+        <a class="btn btn-primary btn-block" id="success-cta" href="shop.html">
+          Weiter einkaufen
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="js/cart.js"></script>
+<script>
+(async function () {
+  "use strict";
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+
+  const iconEl = document.getElementById("success-icon");
+  const headingEl = document.getElementById("success-heading");
+  const messageEl = document.getElementById("success-message");
+  const ctaEl = document.getElementById("success-cta");
+
+  function setState({ tone, heading, message }) {
+    iconEl.style.background = tone === "error" ? "var(--color-danger)" : "var(--gradient-primary)";
+    headingEl.textContent = heading;
+    messageEl.textContent = message;
+  }
+
+  if (!sessionId) {
+    setState({ tone: "error", heading: "Keine Bestellung gefunden", message: "Diesem Link fehlt die Sitzungs-ID. Falls du gerade bezahlt hast, prüfe „Mein Konto“ → Meine Bestellungen." });
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/checkout/session/" + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Bestellung nicht gefunden.");
+
+    if (data.status === "Zahlung ausstehend") {
+      setState({ tone: "pending", heading: "Zahlung wird noch bestätigt …", message: "Bestellung " + data.orderNumber + " wartet auf die Zahlungsbestätigung. Lade diese Seite in ein paar Sekunden neu." });
+    } else if (data.status === "Zahlung fehlgeschlagen") {
+      setState({ tone: "error", heading: "Zahlung fehlgeschlagen", message: "Bestellung " + data.orderNumber + " konnte nicht bezahlt werden. Bitte versuch es erneut." });
+    } else {
+      Cart.clear();
+      setState({ tone: "success", heading: "Danke für deine Bestellung!", message: "Bestellung " + data.orderNumber + " wurde bestätigt und wird jetzt bearbeitet. Eine Bestätigung ist unterwegs an deine E-Mail-Adresse." });
+    }
+  } catch (err) {
+    setState({ tone: "error", heading: "Bestellung nicht gefunden", message: err.message });
+  }
+})();
+</script>
+</body>
+</html>

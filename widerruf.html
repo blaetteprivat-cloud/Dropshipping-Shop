@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Widerrufsrecht — NovaShop</title>
+<meta name="description" content="Widerrufsbelehrung und Muster-Widerrufsformular für Bestellungen bei NovaShop.">
+<link rel="canonical" href="%%BASE_URL%%/widerruf.html">
+<meta name="theme-color" content="#0a0908">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239c7a52'/%3E%3Cstop offset='1' stop-color='%23c2a06c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='6' fill='url(%23g)'/%3E%3Ctext x='12' y='16.5' font-family='sans-serif' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .legal-main { max-width: 760px; margin: 0 auto; padding-block: var(--space-8) var(--space-9); }
+  .legal-main h1 { font-size: clamp(1.8rem, 3.6vw, 2.4rem); margin-bottom: var(--space-6); }
+  .legal-main h2 { font-size: 1.25rem; margin-top: var(--space-7); margin-bottom: var(--space-3); }
+  .legal-main p, .legal-main li { color: var(--color-text-muted); line-height: 1.7; }
+  .legal-main ul { padding-left: 1.2em; margin-bottom: var(--space-4); }
+  .legal-main a { color: var(--color-primary); }
+  .legal-notice {
+    display: flex; gap: var(--space-3); align-items: flex-start;
+    padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg);
+    background: rgba(var(--color-danger-rgb), 0.12);
+    border: 1px solid rgba(var(--color-danger-rgb), 0.35);
+    margin-bottom: var(--space-7);
+  }
+  .legal-notice strong { color: var(--color-danger); }
+  .legal-todo { background: rgba(var(--color-primary-rgb, 156, 122, 82), 0.22); padding: 0 .3em; border-radius: 4px; font-style: normal; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="icon-cart" viewBox="0 0 24 24"><polyline points="3,4 5,4 7,15 18,15 20,7 6,7"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.5 3.6-8 8-8s8 3.5 8 8"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="icon-shield-check" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z"/><polyline points="8.5,12 11,14.5 15.5,9.5"/></symbol>
+    <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-facebook" viewBox="0 0 24 24"><path d="M15 4h-2a4 4 0 00-4 4v2H7v3h2v7h3v-7h2.5l.5-3H12V8a1 1 0 011-1h2V4z"/></symbol>
+    <symbol id="icon-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></symbol>
+    <symbol id="icon-youtube" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10,9 16,12 10,15" fill="currentColor" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<header class="navbar">
+  <div class="container navbar__inner">
+    <a class="brand" href="index.html" aria-label="NovaShop Startseite">
+      <span class="brand__mark" aria-hidden="true">N</span>
+      <span class="brand__lockup">NovaShop<span class="brand__sub">Mehr als nur ein Laden</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="index.html">Start</a>
+      <a href="shop.html">Shop</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+    <div class="navbar__actions">
+      <button class="btn-icon account-trigger-nav-only" id="account-trigger-nav" data-account-trigger aria-label="Mein Konto öffnen">
+        <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+        <span class="badge-count badge-count--dot" data-notif-badge hidden></span>
+      </button>
+      <a class="btn-icon" href="shop.html" aria-label="Zum Warenkorb im Shop"><svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg></a>
+      <button class="btn-icon nav-toggle" id="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu"><svg class="icon" aria-hidden="true"><use href="#icon-menu"></use></svg></button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile Navigation">
+  <a href="index.html">Start</a>
+  <a href="shop.html">Shop</a>
+  <a href="faq.html">FAQ</a>
+  <button type="button" class="mobile-menu__account" data-account-trigger>
+    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+    <span data-account-trigger-label>Mein Konto</span>
+  </button>
+</nav>
+
+<main id="main">
+  <div class="container legal-main">
+    <div class="legal-notice">
+      <svg class="icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>
+      <div><strong>Platzhaltertext — noch nicht rechtsgültig.</strong> Diese Seite ist technisch vollständig, aber inhaltlich mit Beispielangaben gefüllt (markiert mit <span class="legal-todo">grauem Hintergrund</span>). Vor Veröffentlichung müssen alle markierten Stellen durch echte Angaben ersetzt und die Seite rechtlich geprüft werden — das ersetzt keine Rechtsberatung.</div>
+    </div>
+
+    <h1>Widerrufsrecht</h1>
+
+    <h2>Widerrufsbelehrung</h2>
+    <p><strong>Widerrufsrecht</strong><br>
+    Du hast das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag, an dem du oder ein von dir benannter Dritter, der nicht der Beförderer ist, die letzte Ware in Besitz genommen hast bzw. hat.</p>
+    <p>Um dein Widerrufsrecht auszuüben, musst du uns</p>
+    <p>
+      <span class="legal-todo">[Firmenname]</span><br>
+      <span class="legal-todo">[Anschrift]</span><br>
+      E-Mail: <span class="legal-todo">[E-Mail-Adresse]</span><br>
+      Telefon: <span class="legal-todo">[Telefonnummer, optional]</span>
+    </p>
+    <p>mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über deinen Entschluss, diesen Vertrag zu widerrufen, informieren. Du kannst dafür das unten stehende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
+    <p>Zur Wahrung der Widerrufsfrist reicht es aus, dass du die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absendest.</p>
+
+    <h2>Folgen des Widerrufs</h2>
+    <p>Wenn du diesen Vertrag widerrufst, haben wir dir alle Zahlungen, die wir von dir erhalten haben, einschließlich der Lieferkosten (mit Ausnahme der zusätzlichen Kosten, die sich daraus ergeben, dass du eine andere Art der Lieferung als die von uns angebotene, günstigste Standardlieferung gewählt hast), unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über deinen Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das du bei der ursprünglichen Transaktion eingesetzt hast, es sei denn, mit dir wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden dir wegen dieser Rückzahlung Entgelte berechnet.</p>
+    <p>Wir können die Rückzahlung verweigern, bis wir die Waren wieder zurückerhalten haben oder bis du den Nachweis erbracht hast, dass du die Waren zurückgesandt hast, je nachdem, welches der frühere Zeitpunkt ist.</p>
+    <p>Du hast die Waren unverzüglich und in jedem Fall spätestens binnen vierzehn Tagen ab dem Tag, an dem du uns über den Widerruf dieses Vertrags unterrichtest, an uns zurückzusenden oder zu übergeben. Die Frist ist gewahrt, wenn du die Waren vor Ablauf der Frist von vierzehn Tagen absendest. Du trägst die unmittelbaren Kosten der Rücksendung der Waren <span class="legal-todo">[ggf. abweichende Kostenregelung eintragen]</span>.</p>
+    <p>Du musst für einen etwaigen Wertverlust der Waren nur aufkommen, wenn dieser Wertverlust auf einen zur Prüfung der Beschaffenheit, Eigenschaften und Funktionsweise der Waren nicht notwendigen Umgang mit ihnen zurückzuführen ist.</p>
+
+    <h2>Muster-Widerrufsformular</h2>
+    <p>(Wenn du den Vertrag widerrufen willst, fülle bitte dieses Formular aus und sende es zurück.)</p>
+    <p style="border:1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4);">
+      An <span class="legal-todo">[Firmenname, Anschrift, E-Mail-Adresse]</span>:<br><br>
+      Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (*)/die Erbringung der folgenden Dienstleistung (*)<br><br>
+      Bestellt am (*)/erhalten am (*): ______________________<br>
+      Name des/der Verbraucher(s): ______________________<br>
+      Anschrift des/der Verbraucher(s): ______________________<br>
+      Bestellnummer: ______________________<br><br>
+      Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier): ______________________<br>
+      Datum: ______________________<br><br>
+      <em>(*) Unzutreffendes streichen.</em>
+    </p>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="index.html"><span class="brand__mark" aria-hidden="true">N</span>NovaShop</a>
+        <p>Kuratierte Elektronik, Gaming- und Lifestyle-Produkte — schnell geliefert, fair bepreist.</p>
+        <div class="footer__social">
+          <a class="btn-icon" href="#" aria-label="NovaShop auf Facebook"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-facebook"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf Instagram"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-instagram"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf X"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-x"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf YouTube"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-youtube"></use></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">Alle Produkte</a></li>
+          <li><a href="shop.html?cat=elektronik">Elektronik</a></li>
+          <li><a href="shop.html?cat=gaming">Gaming</a></li>
+          <li><a href="shop.html?cat=beliebt">Beliebte Artikel</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="index.html#newsletter">Kontakt</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><button type="button" class="footer__link-btn" data-account-trigger>Bestellstatus</button></li>
+          <li><a href="bestellung.html">Gastbestellung verfolgen</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Rechtliches</h4>
+        <ul>
+          <li><a href="impressum.html">Impressum</a></li>
+          <li><a href="datenschutz.html">Datenschutz</a></li>
+          <li><a href="agb.html">AGB</a></li>
+          <li><a href="widerruf.html" aria-current="page">Widerrufsrecht</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 NovaShop. Alle Rechte vorbehalten.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/products.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/account.js"></script>
+<script src="js/scroll-nav.js"></script>
+<script src="js/cookie-consent.js"></script>
+</body>
+</html>

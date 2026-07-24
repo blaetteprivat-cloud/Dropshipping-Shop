@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>NovaShop — Premium Tech &amp; Lifestyle, kostenlos geliefert</title>
 <meta name="description" content="NovaShop: Kuratierte Elektronik, Gaming- und Lifestyle-Produkte zu fairen Preisen. Kostenloser Versand ab 49€, sichere Zahlung, 30 Tage Rückgabe.">
+<link rel="canonical" href="%%BASE_URL%%/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="NovaShop">
+<meta property="og:title" content="NovaShop — Premium Tech &amp; Lifestyle, kostenlos geliefert">
+<meta property="og:description" content="Kuratierte Elektronik, Gaming- und Lifestyle-Produkte zu fairen Preisen. Kostenloser Versand ab 49€, sichere Zahlung, 30 Tage Rückgabe.">
+<meta property="og:image" content="%%BASE_URL%%/img/hero-shop.jpg">
+<meta property="og:url" content="%%BASE_URL%%/">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0a0908">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239c7a52'/%3E%3Cstop offset='1' stop-color='%23c2a06c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='6' fill='url(%23g)'/%3E%3Ctext x='12' y='16.5' font-family='sans-serif' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
 <link rel="preload" href="fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
@@ -80,10 +88,6 @@
     <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
     <span data-account-trigger-label>Mein Konto</span>
   </button>
-  <a href="admin.html" class="mobile-menu__account">
-    <svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>
-    <span>Admin-Bereich</span>
-  </a>
 </nav>
 
 <main id="main">
@@ -142,9 +146,6 @@
             <a class="btn-icon" href="shop.html" aria-label="Warenkorb öffnen">
               <svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg>
               <span class="badge-count" id="cart-badge" data-cart-badge hidden>0</span>
-            </a>
-            <a class="btn-icon" href="admin.html" aria-label="Admin-Bereich" title="Admin-Bereich">
-              <svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>
             </a>
             <button class="btn-icon nav-toggle" id="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
               <svg class="icon" aria-hidden="true"><use href="#icon-menu"></use></svg>
@@ -354,6 +355,7 @@
             <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-mail"></use></svg>
             <input type="email" id="newsletter-email" name="email" placeholder="deine@email.de" autocomplete="email" required>
           </span>
+          <input type="text" id="newsletter-website" name="website" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">
           <button class="btn btn-primary" type="submit">Anmelden</button>
         </form>
         <p class="form-status" id="newsletter-status" role="status" aria-live="polite"></p>
@@ -411,15 +413,16 @@
           <li><a href="#vorteile">Versand &amp; Rückgabe</a></li>
           <li><a href="faq.html">FAQ</a></li>
           <li><button type="button" class="footer__link-btn" data-account-trigger>Bestellstatus</button></li>
+          <li><a href="bestellung.html">Gastbestellung verfolgen</a></li>
         </ul>
       </div>
       <div>
         <h4>Rechtliches</h4>
         <ul>
-          <li><a href="#">Impressum</a></li>
-          <li><a href="#">Datenschutz</a></li>
-          <li><a href="#">AGB</a></li>
-          <li><a href="#">Widerrufsrecht</a></li>
+          <li><a href="impressum.html">Impressum</a></li>
+          <li><a href="datenschutz.html">Datenschutz</a></li>
+          <li><a href="agb.html">AGB</a></li>
+          <li><a href="widerruf.html">Widerrufsrecht</a></li>
         </ul>
       </div>
     </div>
@@ -428,16 +431,13 @@
       <div class="payment-icons">
         <span class="payment-chip">Visa</span>
         <span class="payment-chip">Mastercard</span>
-        <span class="payment-chip">PayPal</span>
-        <span class="payment-chip">Apple Pay</span>
-        <span class="payment-chip">Klarna</span>
+        <span class="payment-chip">Sichere Zahlung via Stripe</span>
       </div>
     </div>
   </div>
 </footer>
 
 <script src="js/products.js"></script>
-<script src="js/product-overrides.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/render.js"></script>

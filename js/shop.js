@@ -34,7 +34,7 @@
   const categoryListEl = document.getElementById("category-list");
 
   function countForCategory(catId) {
-    return ProductOverrides.getEffectiveProducts().filter((p) => p.active && p.categories.includes(catId)).length;
+    return Products.getAll().filter((p) => p.active && p.categories.includes(catId)).length;
   }
 
   function renderCategoryList() {
@@ -47,7 +47,7 @@
       </button>`
     ).join("");
   }
-  renderCategoryList();
+  Products.ready.then(renderCategoryList);
 
   categoryListEl.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-category]");
@@ -80,7 +80,7 @@
   const productsCount = document.getElementById("products-count");
 
   function renderProducts() {
-    let list = ProductOverrides.getEffectiveProducts().filter((p) => p.active && p.categories.includes(activeCategory));
+    let list = Products.getAll().filter((p) => p.active && p.categories.includes(activeCategory));
     if (searchTerm) {
       list = list.filter(
         (p) => p.name.toLowerCase().includes(searchTerm) || p.subtitle.toLowerCase().includes(searchTerm)
@@ -100,7 +100,7 @@
     }
     productsGrid.innerHTML = list.map(renderProductCard).join("");
   }
-  renderProducts();
+  Products.ready.then(renderProducts);
 
   /* Reagiert live auf Änderungen aus dem Admin-Bereich (Preis/Lagerbestand/Aktiv-Status) */
   window.addEventListener("novashop:products-change", () => {
@@ -290,6 +290,7 @@
     cartTotalEl.textContent = formatPrice(summary.total);
   }
   renderCart();
+  Products.ready.then(renderCart);
   window.addEventListener("novashop:cart-change", renderCart);
 
   cartItemsEl.addEventListener("click", (e) => {
