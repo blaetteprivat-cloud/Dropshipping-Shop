@@ -53,17 +53,10 @@ router.post("/create-session", async (req, res, next) => {
     const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const total = subtotal + shippingCost;
 
-    const order = Orders.create({
-      userId: user ? user.id : null,
-      guestName: user ? null : firstName + " " + lastName,
-      guestEmail: user ? null : email,
-      subtotal,
-      shippingCost,
-      total,
-      address: { firstName, lastName, street, zip, city, country },
-      items,
-    });
-
+    /* getStripe() zuerst aufrufen (vor Orders.create()): wenn Stripe nicht
+       konfiguriert ist, soll erst gar keine Bestellung angelegt werden — sonst
+       bleibt bei jedem Checkout-Versuch ohne Stripe-Key eine für immer
+       "Zahlung ausstehend"-Karteileiche in der DB zurück. */
     const stripe = getStripe();
     const lineItems = items.map((it) => ({
       price_data: { currency: "eur", product_data: { name: it.name }, unit_amount: Math.round(it.price * 100) },
@@ -76,15 +69,34 @@ router.post("/create-session", async (req, res, next) => {
       });
     }
 
-    const baseUrl = (process.env.APP_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      customer_email: email,
-      success_url: `${baseUrl}/order-success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/shop.html`,
-      metadata: { orderId: String(order.id), orderNumber: order.orderNumber },
+    const order = Orders.create({
+      userId: user ? user.id : null,
+      guestName: user ? null : firstName + " " + lastName,
+      guestEmail: user ? null : email,
+      subtotal,
+      shippingCost,
+      total,
+      address: { firstName, lastName, street, zip, city, country },
+      items,
     });
+
+    const baseUrl = (process.env.APP_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: lineItems,
+        customer_email: email,
+        success_url: `${baseUrl}/order-success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/shop.html`,
+        metadata: { orderId: String(order.id), orderNumber: order.orderNumber },
+      });
+    } catch (stripeErr) {
+      /* Stripe hat die Session-Erstellung abgelehnt (z.B. ungültiger Key, Netzwerkfehler) —
+         die gerade angelegte Order wieder entfernen statt sie als Datenmüll liegen zu lassen. */
+      Orders.delete(order.id);
+      throw stripeErr;
+    }
 
     Orders.attachStripeSession(order.id, session.id);
     res.json({ url: session.url, orderNumber: order.orderNumber });
