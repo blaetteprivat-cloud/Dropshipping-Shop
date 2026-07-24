@@ -1,0 +1,432 @@
+/* ===========================================================
+   NovaShop — Konto-Modal (Anmelden / Registrieren / E-Mail-Bestätigung / Übersicht)
+   Baut das Modal einmalig auf und verkabelt alle [data-account-trigger]-Buttons.
+   =========================================================== */
+(function () {
+  "use strict";
+
+  const MODAL_HTML = `
+    <div class="modal glass-strong" role="dialog" aria-modal="true" aria-labelledby="auth-modal-heading">
+      <button class="btn-icon modal__close" type="button" id="auth-modal-close" aria-label="Schließen">
+        <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-close"></use></svg>
+      </button>
+
+      <div id="auth-view-guest">
+        <div class="auth-modal__tabs" role="tablist">
+          <button type="button" class="auth-tab is-active" role="tab" aria-selected="true" data-auth-tab="login">Anmelden</button>
+          <button type="button" class="auth-tab" role="tab" aria-selected="false" data-auth-tab="register">Registrieren</button>
+        </div>
+
+        <form id="login-form" class="auth-form" novalidate>
+          <h2 id="auth-modal-heading">Willkommen zurück</h2>
+          <p class="auth-form__sub">Melde dich an, um deine Bestellungen zu sehen.</p>
+          <label for="login-email">E-Mail-Adresse
+            <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="deine@email.de">
+          </label>
+          <label for="login-password">Passwort
+            <span class="password-field">
+              <input type="password" id="login-password" name="password" required autocomplete="current-password" minlength="6" placeholder="••••••••">
+              <button type="button" class="password-toggle" aria-pressed="false" aria-label="Passwort anzeigen" data-password-toggle="login-password">
+                <svg class="icon icon-sm icon-eye" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <svg class="icon icon-sm icon-eye-off" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
+              </button>
+            </span>
+          </label>
+          <p class="form-error" id="login-error" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Anmelden</button>
+        </form>
+
+        <form id="register-form" class="auth-form" novalidate hidden>
+          <h2>Konto erstellen</h2>
+          <p class="auth-form__sub">Kostenlos registrieren — dauert nur eine Minute.</p>
+          <label for="register-name">Name
+            <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Dein Name">
+          </label>
+          <label for="register-email">E-Mail-Adresse
+            <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="deine@email.de">
+          </label>
+          <label for="register-password">Passwort
+            <span class="password-field">
+              <input type="password" id="register-password" name="password" required autocomplete="new-password" minlength="6" placeholder="Mind. 6 Zeichen">
+              <button type="button" class="password-toggle" aria-pressed="false" aria-label="Passwort anzeigen" data-password-toggle="register-password">
+                <svg class="icon icon-sm icon-eye" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <svg class="icon icon-sm icon-eye-off" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
+              </button>
+            </span>
+          </label>
+          <label for="register-password-confirm">Passwort bestätigen
+            <span class="password-field">
+              <input type="password" id="register-password-confirm" name="passwordConfirm" required autocomplete="new-password" placeholder="Passwort wiederholen">
+              <button type="button" class="password-toggle" aria-pressed="false" aria-label="Passwort anzeigen" data-password-toggle="register-password-confirm">
+                <svg class="icon icon-sm icon-eye" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <svg class="icon icon-sm icon-eye-off" aria-hidden="true"><use href="#icon-eye-off"></use></svg>
+              </button>
+            </span>
+          </label>
+          <p class="form-error" id="register-error" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Konto erstellen</button>
+        </form>
+
+        <p class="auth-modal__note">Demo-Konto: Deine Angaben werden ausschließlich lokal in diesem Browser gespeichert — es gibt keinen echten Server im Hintergrund.</p>
+      </div>
+
+      <div id="auth-view-verify-pending" hidden>
+        <div class="admin-login__icon" style="margin:0 0 var(--space-4);">
+          <svg class="icon icon-lg" aria-hidden="true"><use href="#icon-mail"></use></svg>
+        </div>
+        <h2>Fast geschafft!</h2>
+        <p class="auth-form__sub">Wir haben eine Bestätigungsmail an <strong id="verify-pending-email"></strong> geschickt. Bitte bestätige deine Adresse, um dich anzumelden.</p>
+
+        <div class="mock-email">
+          <div class="mock-email__header">
+            <span class="mock-email__from">NovaShop <span>&lt;no-reply@novashop.de&gt;</span></span>
+            <span class="mock-email__to">An: <span id="mock-email-to"></span></span>
+          </div>
+          <p class="mock-email__subject">Bitte bestätige deine E-Mail-Adresse</p>
+          <div class="mock-email__body">
+            <p>Hallo <span id="mock-email-name"></span>,</p>
+            <p>schön, dass du bei NovaShop dabei bist! Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.</p>
+            <a class="btn btn-primary btn-sm" id="mock-email-verify-link" href="verify.html">E-Mail-Adresse bestätigen</a>
+            <p class="mock-email__footer">Falls du dich nicht registriert hast, kannst du diese Nachricht ignorieren.</p>
+          </div>
+        </div>
+
+        <p class="auth-modal__note">Demo-Hinweis: Da diese Seite ohne echten Mailserver läuft, zeigen wir den Inhalt der Bestätigungsmail hier direkt an, statt sie zu verschicken. Der Button oben simuliert den Klick auf den Link in deinem Postfach.</p>
+        <button class="btn btn-ghost btn-block" type="button" id="verify-pending-back">Zurück zur Anmeldung</button>
+      </div>
+
+      <div id="auth-view-account" hidden>
+        <div class="account-header">
+          <div class="account-avatar" id="account-avatar" aria-hidden="true"></div>
+          <div class="account-header__info">
+            <strong id="account-name"></strong>
+            <span id="account-email"></span>
+          </div>
+        </div>
+        <div class="account-notifications">
+          <h3>
+            <svg class="icon" aria-hidden="true"><use href="#icon-bell"></use></svg>Benachrichtigungen
+            <button type="button" class="notif-mark-all" id="notif-mark-all" hidden>Alle als gelesen markieren</button>
+          </h3>
+          <div id="account-notifications-list"></div>
+        </div>
+
+        <div class="account-orders">
+          <h3><svg class="icon" aria-hidden="true"><use href="#icon-receipt"></use></svg>Meine Bestellungen</h3>
+          <div id="account-orders-list"></div>
+        </div>
+        <button class="btn btn-ghost btn-block" type="button" id="logout-btn">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-logout"></use></svg>
+          Abmelden
+        </button>
+      </div>
+    </div>`;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.id = "auth-backdrop";
+  backdrop.innerHTML = MODAL_HTML;
+  document.body.appendChild(backdrop);
+
+  const modal = backdrop.querySelector(".modal");
+  const closeBtn = document.getElementById("auth-modal-close");
+  const guestView = document.getElementById("auth-view-guest");
+  const verifyPendingView = document.getElementById("auth-view-verify-pending");
+  const accountView = document.getElementById("auth-view-account");
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
+  const loginError = document.getElementById("login-error");
+  const registerError = document.getElementById("register-error");
+  let lastFocusedEl = null;
+
+  function openModal() {
+    lastFocusedEl = document.activeElement;
+    backdrop.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+    renderAuthState();
+    const firstField = backdrop.querySelector(':not([hidden]) input, #logout-btn');
+    setTimeout(() => firstField && firstField.focus(), 50);
+  }
+
+  function closeModal() {
+    backdrop.classList.remove("is-open");
+    document.body.style.overflow = "";
+    loginError.textContent = "";
+    registerError.textContent = "";
+    if (!verifyPendingView.hidden) resetToLoginTab();
+    if (lastFocusedEl) lastFocusedEl.focus();
+  }
+
+  closeBtn.addEventListener("click", closeModal);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && backdrop.classList.contains("is-open")) closeModal();
+  });
+
+  /* -------------------- Tabs -------------------- */
+  backdrop.querySelectorAll("[data-auth-tab]").forEach((tabBtn) => {
+    tabBtn.addEventListener("click", () => {
+      const target = tabBtn.getAttribute("data-auth-tab");
+      backdrop.querySelectorAll("[data-auth-tab]").forEach((b) => {
+        const active = b === tabBtn;
+        b.classList.toggle("is-active", active);
+        b.setAttribute("aria-selected", String(active));
+      });
+      loginForm.hidden = target !== "login";
+      registerForm.hidden = target !== "register";
+      loginError.textContent = "";
+      registerError.textContent = "";
+    });
+  });
+
+  /* -------------------- Passwort ein-/ausblenden -------------------- */
+  backdrop.querySelectorAll("[data-password-toggle]").forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const input = document.getElementById(toggle.getAttribute("data-password-toggle"));
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      toggle.setAttribute("aria-pressed", String(show));
+      toggle.setAttribute("aria-label", show ? "Passwort verbergen" : "Passwort anzeigen");
+    });
+  });
+
+  /* -------------------- Simulierte Bestätigungsmail anzeigen -------------------- */
+  function showVerifyPending({ email, name, verificationToken }) {
+    guestView.hidden = true;
+    verifyPendingView.hidden = false;
+    accountView.hidden = true;
+    document.getElementById("verify-pending-email").textContent = email;
+    document.getElementById("mock-email-to").textContent = email;
+    document.getElementById("mock-email-name").textContent = name;
+    const link = "verify.html?email=" + encodeURIComponent(email) + "&token=" + encodeURIComponent(verificationToken);
+    document.getElementById("mock-email-verify-link").setAttribute("href", link);
+  }
+
+  document.getElementById("verify-pending-back").addEventListener("click", () => {
+    resetToLoginTab();
+    renderAuthState();
+  });
+
+  /* -------------------- Login -------------------- */
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loginError.textContent = "";
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await Auth.login({ email, password });
+      loginForm.reset();
+      renderAuthState();
+      showToast("Willkommen zurück", Auth.getCurrentUser().name);
+    } catch (err) {
+      if (err.code === "EMAIL_NOT_VERIFIED") {
+        try {
+          const resent = Auth.resendVerification(email);
+          showVerifyPending(resent);
+        } catch (resendErr) {
+          loginError.textContent = resendErr.message;
+        }
+      } else {
+        loginError.textContent = err.message;
+      }
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  /* -------------------- Registrierung -------------------- */
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    registerError.textContent = "";
+    const name = document.getElementById("register-name").value.trim();
+    const email = document.getElementById("register-email").value;
+    const password = document.getElementById("register-password").value;
+    const passwordConfirm = document.getElementById("register-password-confirm").value;
+    const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+    if (name.length < 2) {
+      registerError.textContent = "Bitte gib deinen Namen ein.";
+      return;
+    }
+    if (password.length < 6) {
+      registerError.textContent = "Das Passwort muss mindestens 6 Zeichen lang sein.";
+      return;
+    }
+    if (password !== passwordConfirm) {
+      registerError.textContent = "Die Passwörter stimmen nicht überein.";
+      return;
+    }
+
+    submitBtn.disabled = true;
+    try {
+      const result = await Auth.register({ name, email, password });
+      registerForm.reset();
+      showVerifyPending(result);
+    } catch (err) {
+      registerError.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  /* -------------------- Abmelden -------------------- */
+  function resetToLoginTab() {
+    backdrop.querySelectorAll("[data-auth-tab]").forEach((b) => {
+      const active = b.getAttribute("data-auth-tab") === "login";
+      b.classList.toggle("is-active", active);
+      b.setAttribute("aria-selected", String(active));
+    });
+    loginForm.hidden = false;
+    registerForm.hidden = true;
+    verifyPendingView.hidden = true;
+  }
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    Auth.logout();
+    resetToLoginTab();
+    renderAuthState();
+    showToast("Abgemeldet", "Bis bald bei NovaShop!");
+    closeModal();
+  });
+
+  /* -------------------- Ansicht rendern -------------------- */
+  function initials(name) {
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("");
+  }
+
+  function renderOrders(user) {
+    const list = document.getElementById("account-orders-list");
+    const orders = Auth.getOrders(user.email);
+    if (orders.length === 0) {
+      list.innerHTML = '<p class="account-orders-empty">Noch keine Bestellungen. Deine nächste Bestellung erscheint hier automatisch.</p>';
+      return;
+    }
+    list.innerHTML = orders
+      .map((order) => {
+        const date = new Date(order.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+        const itemsSummary = order.items.map((it) => `${it.qty}× ${escapeHtml(it.name)}`).join(", ");
+        return `
+        <div class="order-card">
+          <div class="order-card__top">
+            <span class="order-card__id">${order.id}</span>
+            <span class="order-card__date">${date}</span>
+          </div>
+          <p class="order-card__items">${itemsSummary}</p>
+          <div class="order-card__bottom">
+            <span class="order-card__total">${formatPrice(order.total)}</span>
+            <span class="status-badge" data-status="${order.status || "In Bearbeitung"}">${order.status || "In Bearbeitung"}</span>
+          </div>
+        </div>`;
+      })
+      .join("");
+  }
+
+  function timeAgo(iso) {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const minutes = Math.round(diffMs / 60000);
+    if (minutes < 1) return "gerade eben";
+    if (minutes < 60) return "vor " + minutes + " Min.";
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return "vor " + hours + " Std.";
+    const days = Math.round(hours / 24);
+    if (days < 7) return "vor " + days + " Tag" + (days === 1 ? "" : "en");
+    return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+
+  function renderNotifications(user) {
+    const list = document.getElementById("account-notifications-list");
+    const markAllBtn = document.getElementById("notif-mark-all");
+    const notifications = Auth.getNotifications(user.email);
+    markAllBtn.hidden = notifications.every((n) => n.read);
+    if (notifications.length === 0) {
+      list.innerHTML = '<p class="account-orders-empty">Noch keine Benachrichtigungen. Updates zu deinen Bestellungen erscheinen hier.</p>';
+      return;
+    }
+    list.innerHTML = notifications
+      .slice(0, 8)
+      .map(
+        (n) => `
+      <button type="button" class="notif-item${n.read ? "" : " notif-item--unread"}" data-notif-id="${n.id}">
+        <span class="notif-item__icon"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-receipt"></use></svg></span>
+        <span class="notif-item__body">
+          <span class="notif-item__title">${n.title}</span>
+          <span class="notif-item__message">${n.message}</span>
+          <span class="notif-item__time">${timeAgo(n.date)}</span>
+        </span>
+      </button>`
+      )
+      .join("");
+  }
+
+  document.getElementById("account-notifications-list").addEventListener("click", (e) => {
+    const item = e.target.closest("[data-notif-id]");
+    if (!item) return;
+    const user = Auth.getCurrentUser();
+    if (!user) return;
+    Auth.markNotificationRead(user.email, item.getAttribute("data-notif-id"));
+    renderNotifications(user);
+    updateTriggerButtons(user);
+  });
+
+  document.getElementById("notif-mark-all").addEventListener("click", () => {
+    const user = Auth.getCurrentUser();
+    if (!user) return;
+    Auth.markAllNotificationsRead(user.email);
+    renderNotifications(user);
+    updateTriggerButtons(user);
+  });
+
+  function renderAuthState() {
+    const user = Auth.getCurrentUser();
+    if (user) {
+      guestView.hidden = true;
+      verifyPendingView.hidden = true;
+      accountView.hidden = false;
+      document.getElementById("account-avatar").textContent = initials(user.name);
+      document.getElementById("account-name").textContent = user.name;
+      document.getElementById("account-email").textContent = user.email;
+      renderNotifications(user);
+      renderOrders(user);
+    } else if (verifyPendingView.hidden) {
+      guestView.hidden = false;
+      accountView.hidden = true;
+    }
+    updateTriggerButtons(user);
+  }
+
+  function updateTriggerButtons(user) {
+    document.querySelectorAll("[data-account-trigger-label]").forEach((label) => {
+      label.textContent = user ? user.name.split(" ")[0] : "Mein Konto";
+    });
+    document.querySelectorAll("[data-account-trigger]").forEach((btn) => {
+      btn.setAttribute("aria-label", user ? "Konto von " + user.name + " öffnen" : "Mein Konto öffnen");
+    });
+    const unread = user ? Auth.getUnreadCount(user.email) : 0;
+    document.querySelectorAll("[data-notif-badge]").forEach((badge) => {
+      badge.hidden = unread === 0;
+    });
+  }
+
+  document.querySelectorAll("[data-account-trigger]").forEach((btn) => {
+    btn.addEventListener("click", openModal);
+  });
+
+  window.addEventListener("novashop:auth-change", renderAuthState);
+  window.addEventListener("novashop:notifications-change", () => {
+    const user = Auth.getCurrentUser();
+    if (!user) return;
+    if (!accountView.hidden) renderNotifications(user);
+    updateTriggerButtons(user);
+  });
+  document.addEventListener("DOMContentLoaded", renderAuthState);
+  renderAuthState();
+})();

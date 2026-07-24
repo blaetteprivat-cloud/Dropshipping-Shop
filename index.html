@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NovaShop — Premium Tech &amp; Lifestyle, kostenlos geliefert</title>
+<meta name="description" content="NovaShop: Kuratierte Elektronik, Gaming- und Lifestyle-Produkte zu fairen Preisen. Kostenloser Versand ab 49€, sichere Zahlung, 30 Tage Rückgabe.">
+<meta name="theme-color" content="#0a0908">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239c7a52'/%3E%3Cstop offset='1' stop-color='%23c2a06c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='6' fill='url(%23g)'/%3E%3Ctext x='12' y='16.5' font-family='sans-serif' font-size='12' font-weight='700' fill='white' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/landing.css">
+<link rel="stylesheet" href="css/shopfront.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+<!-- Icon-Sprite: inline eingebettet, damit Icons auch beim Öffnen per Doppelklick (file://) garantiert laden -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="icon-cart" viewBox="0 0 24 24"><polyline points="3,4 5,4 7,15 18,15 20,7 6,7"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.5 3.6-8 8-8s8 3.5 8 8"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C0.3 8.2 2 4.5 5.5 4.5c2 0 3.5 1.2 4.5 2.8 1-1.6 2.5-2.8 4.5-2.8 3.5 0 5.2 3.7 3.5 7.2C19.5 16.3 12 21 12 21z"/></symbol>
+    <symbol id="icon-heart-filled" viewBox="0 0 24 24" stroke="none"><path d="M12 21s-7.5-4.7-10-9.3C0.3 8.2 2 4.5 5.5 4.5c2 0 3.5 1.2 4.5 2.8 1-1.6 2.5-2.8 4.5-2.8 3.5 0 5.2 3.7 3.5 7.2C19.5 16.3 12 21 12 21z" fill="currentColor"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="icon-flame" viewBox="0 0 24 24"><path d="M12 2c1 3-3 4-3 7a3 3 0 006 0c0-1-1-2-1-3 2 1 3 3 3 6a5 5 0 01-10 0c0-4 3-6 5-10z"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"/></symbol>
+    <symbol id="icon-chevron-left" viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="icon-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="5,13 10,18 19,7"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13,6 19,12 13,18"/></symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3,7 12,13 21,7"/></symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24"><rect x="1" y="6" width="13" height="10" rx="1"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="6" cy="19" r="1.7"/><circle cx="17" cy="19" r="1.7"/></symbol>
+    <symbol id="icon-shield-check" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5l8-3z"/><polyline points="8.5,12 11,14.5 15.5,9.5"/></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7-6.2-3.6-6.2 3.6 1.4-7L2 9.3l7-.8z"/></symbol>
+    <symbol id="icon-rotate" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5.3"/><polyline points="18,3 18,7 14,7"/><path d="M20 12a8 8 0 01-14 5.3"/><polyline points="6,21 6,17 10,17"/></symbol>
+    <symbol id="icon-headset" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="2" y="14" width="4" height="6" rx="2"/><rect x="18" y="14" width="4" height="6" rx="2"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <symbol id="icon-receipt" viewBox="0 0 24 24"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M9.5 19a2.5 2.5 0 005 0"/></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l2-3h4l2 3"/><circle cx="12" cy="14" r="4"/></symbol>
+    <symbol id="icon-gamepad" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="9" rx="4"/><line x1="7" y1="12" x2="10" y2="12"/><line x1="8.5" y1="9.5" x2="8.5" y2="14.5"/><circle cx="17" cy="11" r="1"/><circle cx="19" cy="13" r="1"/></symbol>
+    <symbol id="icon-shirt" viewBox="0 0 24 24"><path d="M8 3l4 2 4-2 4 4-3 3v11H7V10l-3-3z"/></symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 15l.6 1.8 1.9.6-1.9.6-.6 1.9-.6-1.9-1.9-.6 1.9-.6z"/></symbol>
+    <symbol id="icon-dumbbell" viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12"/><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><rect x="5" y="10" width="2" height="4"/><rect x="17" y="10" width="2" height="4"/></symbol>
+    <symbol id="icon-toy" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="1"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="3" y1="13" x2="21" y2="13"/><path d="M9 8c0-2 1.5-4 3-4s3 2 3 4"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 5c2-1 5-1 7 0v14c-2-1-5-1-7 0V5z"/><path d="M20 5c-2-1-5-1-7 0v14c2-1 5-1 7 0V5z"/></symbol>
+    <symbol id="icon-package" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v9l9 5 9-5V8"/><line x1="12" y1="13" x2="12" y2="22"/></symbol>
+    <symbol id="icon-mouse" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="5"/><line x1="12" y1="3" x2="12" y2="10"/></symbol>
+    <symbol id="icon-watch" viewBox="0 0 24 24"><rect x="7" y="8" width="10" height="8" rx="2"/><path d="M9 8V5h6v3"/><path d="M9 16v3h6v-3"/></symbol>
+    <symbol id="icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="15.5" x2="18" y2="15.5"/><rect x="5" y="9" width="2" height="2"/><rect x="9" y="9" width="2" height="2"/><rect x="13" y="9" width="2" height="2"/><rect x="17" y="9" width="2" height="2"/></symbol>
+    <symbol id="icon-earbuds" viewBox="0 0 24 24"><circle cx="8" cy="10" r="3"/><circle cx="16" cy="10" r="3"/><line x1="8" y1="13" x2="8" y2="18"/><line x1="16" y1="13" x2="16" y2="18"/></symbol>
+    <symbol id="icon-speaker" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="8" r="2.3"/><circle cx="12" cy="15.5" r="3.3"/></symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></symbol>
+    <symbol id="icon-facebook" viewBox="0 0 24 24"><path d="M15 4h-2a4 4 0 00-4 4v2H7v3h2v7h3v-7h2.5l.5-3H12V8a1 1 0 011-1h2V4z"/></symbol>
+    <symbol id="icon-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></symbol>
+    <symbol id="icon-youtube" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10,9 16,12 10,15" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 16,14"/></symbol>
+    <symbol id="icon-chevron-up" viewBox="0 0 24 24"><polyline points="5,15 12,8 19,15"/></symbol>
+  </defs>
+</svg>
+
+<nav class="mobile-menu" id="mobile-menu" aria-label="Mobile Navigation">
+  <a href="index.html" aria-current="page">Start</a>
+  <a href="shop.html">Shop</a>
+  <a href="#vorteile">Vorteile</a>
+  <a href="#bewertungen">Bewertungen</a>
+  <a href="#newsletter">Kontakt</a>
+  <button type="button" class="mobile-menu__account" data-account-trigger>
+    <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+    <span data-account-trigger-label>Mein Konto</span>
+  </button>
+  <a href="admin.html" class="mobile-menu__account">
+    <svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>
+    <span>Admin-Bereich</span>
+  </a>
+</nav>
+
+<main id="main">
+  <!-- ============ SCHAUFENSTER-HERO ============ -->
+  <header class="shopfront">
+    <div class="container shopfront__grid reveal">
+
+      <!-- Tür-Panel -->
+      <div class="shopfront__door">
+        <div class="shopfront__card">
+          <p class="shopfront__card-brand">NovaShop<span>Online-Shop</span></p>
+          <div class="shopfront__card-row">
+            <svg class="icon" aria-hidden="true"><use href="#icon-clock"></use></svg>
+            <div>
+              <strong>Support-Zeiten</strong>
+              <span>Mo – Fr&nbsp; 9:00 – 18:30<br>Sa&nbsp; &nbsp; &nbsp;9:00 – 14:00<br>So&nbsp; &nbsp; &nbsp;Geschlossen</span>
+            </div>
+          </div>
+          <div class="shopfront__card-row">
+            <svg class="icon" aria-hidden="true"><use href="#icon-mail"></use></svg>
+            <div>
+              <strong>Kontakt</strong>
+              <span>support@novashop.de</span>
+            </div>
+          </div>
+          <a class="btn btn-primary shopfront__card-btn" href="shop.html">
+            Shop betreten
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+          </a>
+          <a class="shopfront__card-link" href="shop.html">
+            <svg class="icon" aria-hidden="true"><use href="#icon-package"></use></svg>
+            Sortiment entdecken
+          </a>
+        </div>
+      </div>
+
+      <!-- Schaufenster-Panel -->
+      <div class="shopfront__window">
+        <div class="shopfront__topbar">
+          <div class="shopfront__logo">
+            <span class="brand__mark" aria-hidden="true">N</span>
+            NovaShop
+          </div>
+          <nav class="nav-links" aria-label="Hauptnavigation">
+            <a href="index.html" aria-current="page">Start</a>
+            <a href="shop.html">Shop</a>
+            <a href="#vorteile">Vorteile</a>
+            <a href="#bewertungen">Bewertungen</a>
+            <a href="#newsletter">Kontakt</a>
+          </nav>
+          <div class="shopfront__topbar-actions">
+            <button class="btn-icon" id="account-trigger-nav" data-account-trigger aria-label="Mein Konto öffnen">
+              <svg class="icon" aria-hidden="true"><use href="#icon-user"></use></svg>
+              <span class="badge-count badge-count--dot" data-notif-badge hidden></span>
+            </button>
+            <a class="btn-icon" href="shop.html" aria-label="Warenkorb öffnen">
+              <svg class="icon" aria-hidden="true"><use href="#icon-cart"></use></svg>
+              <span class="badge-count" id="cart-badge" data-cart-badge hidden>0</span>
+            </a>
+            <a class="btn-icon" href="admin.html" aria-label="Admin-Bereich" title="Admin-Bereich">
+              <svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>
+            </a>
+            <button class="btn-icon nav-toggle" id="nav-toggle" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobile-menu">
+              <svg class="icon" aria-hidden="true"><use href="#icon-menu"></use></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="shopfront__content">
+          <span class="eyebrow hero__eyebrow glass">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-flame"></use></svg>
+            Neu: Sommer-Kollektion 2026 ist da
+          </span>
+          <h1>Willkommen im<br>digitalen Schaufenster</h1>
+          <p class="lead">Entdecke unser Sortiment, aktuelle Angebote und stöbere jederzeit online in Ruhe durch unseren Shop.</p>
+          <div class="shopfront__ctas">
+            <a class="btn btn-primary" href="shop.html">
+              Jetzt reinschauen
+              <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+            </a>
+            <a class="btn btn-ghost" href="#vorteile">Vorteile entdecken</a>
+          </div>
+          <div class="shopfront__live">
+            <span class="shopfront__live-dot" aria-hidden="true"></span>
+            <div>
+              <strong>Live Sortiment</strong>
+              <span>Unser Lagerbestand wird laufend aktualisiert — was online ist, ist verfügbar.</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="shopfront__orbit" type="button" aria-label="Produkte im 360°-Rundgang entdecken">
+          <svg class="icon icon-sm shopfront__orbit-chev" aria-hidden="true"><use href="#icon-chevron-left"></use></svg>
+          <span>360°<br>entdecken</span>
+          <svg class="icon icon-sm shopfront__orbit-chev" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+        </button>
+
+        <div class="shopfront__services">
+          <a class="shopfront__service-card" href="shop.html">
+            <span class="shopfront__service-icon shopfront__service-icon--a"><svg class="icon" aria-hidden="true"><use href="#icon-camera"></use></svg></span>
+            <span class="shopfront__service-body">
+              <strong>Elektronik &amp; Gadgets</strong>
+              <span>Kopfhörer, Wearables &amp; smarte Technik.</span>
+            </span>
+            <svg class="icon icon-sm shopfront__service-arrow" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+          </a>
+          <a class="shopfront__service-card" href="shop.html">
+            <span class="shopfront__service-icon shopfront__service-icon--b"><svg class="icon" aria-hidden="true"><use href="#icon-gamepad"></use></svg></span>
+            <span class="shopfront__service-body">
+              <strong>Gaming Zubehör</strong>
+              <span>Maus, Tastatur &amp; Headsets.</span>
+            </span>
+            <svg class="icon icon-sm shopfront__service-arrow" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+          </a>
+          <a class="shopfront__service-card" href="shop.html">
+            <span class="shopfront__service-icon shopfront__service-icon--c"><svg class="icon" aria-hidden="true"><use href="#icon-home"></use></svg></span>
+            <span class="shopfront__service-body">
+              <strong>Home &amp; Lifestyle</strong>
+              <span>Beleuchtung, Deko &amp; Alltagshelfer.</span>
+            </span>
+            <svg class="icon icon-sm shopfront__service-arrow" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <div class="shopfront__scrollcue" aria-hidden="true">
+      <svg class="icon" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+    </div>
+  </header>
+
+  <!-- ============ STATS ============ -->
+  <!-- Bewusst nur Zahlen, die wir auch belegen können (echter Katalogbestand, echte Konditionen) —
+       keine erfundenen Kunden-/Länder-/Bewertungszahlen ohne Datengrundlage. -->
+  <section class="stats">
+    <div class="container stats__grid">
+      <div class="reveal"><div class="stats__num" id="stat-product-count" data-count="0" data-suffix="+">0</div><div class="stats__label">Produkte im Sortiment</div></div>
+      <div class="reveal"><div class="stats__num" data-count="30" data-suffix=" Tage">0</div><div class="stats__label">Rückgaberecht</div></div>
+      <div class="reveal"><div class="stats__num" data-count="49" data-suffix="€">0</div><div class="stats__label">Kostenloser Versand ab</div></div>
+      <div class="reveal"><div class="stats__num" data-count="24" data-suffix="/7">0</div><div class="stats__label">Support verfügbar</div></div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="section" id="vorteile">
+    <div class="container">
+      <div class="section__header reveal">
+        <span class="eyebrow glass">Warum NovaShop?</span>
+        <h2>Shopping, dem du vertrauen kannst</h2>
+        <p>Wir kombinieren kuratierte Produktauswahl mit einem reibungslosen, sicheren Einkaufserlebnis — auf jedem Gerät.</p>
+      </div>
+      <div class="features__grid">
+        <article class="feature-card glass reveal">
+          <div class="feature-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg></div>
+          <h3>Kostenloser Versand</h3>
+          <p>Ab einem Bestellwert von 49€ liefern wir komplett kostenfrei — europaweit.</p>
+        </article>
+        <article class="feature-card glass reveal">
+          <div class="feature-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg></div>
+          <h3>Sichere Zahlung</h3>
+          <p>SSL-verschlüsselt und mit Käuferschutz — deine Daten sind bei uns sicher.</p>
+        </article>
+        <article class="feature-card glass reveal">
+          <div class="feature-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg></div>
+          <h3>30 Tage Rückgabe</h3>
+          <p>Nicht zufrieden? Kein Problem — unkompliziert zurücksenden, Geld zurück.</p>
+        </article>
+        <article class="feature-card glass reveal">
+          <div class="feature-card__icon"><svg class="icon" aria-hidden="true"><use href="#icon-headset"></use></svg></div>
+          <h3>24/7 Support</h3>
+          <p>Unser Team beantwortet deine Fragen jederzeit — schnell und persönlich.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KATEGORIEN ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section__header between reveal">
+        <div>
+          <span class="eyebrow glass">Sortiment</span>
+          <h2>Beliebte Kategorien</h2>
+        </div>
+        <a class="btn btn-ghost" href="shop.html">Alle Kategorien<svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></a>
+      </div>
+      <div class="categories__grid" id="category-preview"></div>
+    </div>
+  </section>
+
+  <!-- ============ PRODUKTE ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="section__header between reveal">
+        <div>
+          <span class="eyebrow glass"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-flame"></use></svg> Trend</span>
+          <h2>Beliebte Produkte</h2>
+        </div>
+        <a class="btn btn-ghost" href="shop.html">Alle ansehen<svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></a>
+      </div>
+      <div class="products__grid" id="product-preview"></div>
+    </div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="section section--tight" id="bewertungen">
+    <div class="container">
+      <div class="section__header reveal">
+        <span class="eyebrow glass">Kundenstimmen</span>
+        <h2>Das sagen unsere Kunden</h2>
+      </div>
+      <div class="testimonials__track">
+        <article class="testimonial-card glass reveal">
+          <div class="testimonial-card__stars">
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+          </div>
+          <p>„Die Lieferung war überraschend schnell und die Verpackung top. Die Earbuds klingen richtig gut für den Preis!“</p>
+          <div class="testimonial-card__author">
+            <span class="testimonial-card__avatar">L</span>
+            <span><strong>Laura M.</strong><span>Verifizierter Kauf</span></span>
+          </div>
+        </article>
+        <article class="testimonial-card glass reveal">
+          <div class="testimonial-card__stars">
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+          </div>
+          <p>„Kundenservice hat mir sofort geholfen als ich eine Frage zur Bestellung hatte. Sehr freundlich und kompetent.“</p>
+          <div class="testimonial-card__author">
+            <span class="testimonial-card__avatar">D</span>
+            <span><strong>David K.</strong><span>Verifizierter Kauf</span></span>
+          </div>
+        </article>
+        <article class="testimonial-card glass reveal">
+          <div class="testimonial-card__stars">
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+            <svg class="icon" aria-hidden="true"><use href="#icon-star"></use></svg>
+          </div>
+          <p>„Die Gaming Maus hat meine Erwartungen übertroffen. Präzise, leicht und das RGB sieht im Dunkeln richtig gut aus.“</p>
+          <div class="testimonial-card__author">
+            <span class="testimonial-card__avatar">J</span>
+            <span><strong>Jonas R.</strong><span>Verifizierter Kauf</span></span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWSLETTER ============ -->
+  <section class="section section--tight" id="newsletter">
+    <div class="container">
+      <div class="newsletter glass reveal">
+        <h2>Verpasse keine Angebote</h2>
+        <p>Melde dich für unseren Newsletter an und erhalte 10% Rabatt auf deine erste Bestellung sowie exklusive Deals.</p>
+        <form class="newsletter-form" id="newsletter-form" novalidate>
+          <label class="sr-only" for="newsletter-email">E-Mail-Adresse</label>
+          <span class="newsletter-form__field glass">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-mail"></use></svg>
+            <input type="email" id="newsletter-email" name="email" placeholder="deine@email.de" autocomplete="email" required>
+          </span>
+          <button class="btn btn-primary" type="submit">Anmelden</button>
+        </form>
+        <p class="form-status" id="newsletter-status" role="status" aria-live="polite"></p>
+        <p class="newsletter__note">Kein Spam. Jederzeit abbestellbar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA BANNER ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <div class="cta-banner__content">
+          <h2>Bereit für dein nächstes Lieblingsprodukt?</h2>
+          <p>Stöbere durch unser komplettes Sortiment und finde, wonach du suchst.</p>
+          <a class="btn btn-primary" href="shop.html">
+            Zum Shop
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="brand" href="index.html">
+          <span class="brand__mark" aria-hidden="true">N</span>
+          NovaShop
+        </a>
+        <p>Kuratierte Elektronik, Gaming- und Lifestyle-Produkte — schnell geliefert, fair bepreist.</p>
+        <div class="footer__social">
+          <a class="btn-icon" href="#" aria-label="NovaShop auf Facebook"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-facebook"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf Instagram"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-instagram"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf X"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-x"></use></svg></a>
+          <a class="btn-icon" href="#" aria-label="NovaShop auf YouTube"><svg class="icon icon-sm" aria-hidden="true"><use href="#icon-youtube"></use></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">Alle Produkte</a></li>
+          <li><a href="shop.html?cat=elektronik">Elektronik</a></li>
+          <li><a href="shop.html?cat=gaming">Gaming</a></li>
+          <li><a href="shop.html?cat=beliebt">Beliebte Artikel</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#newsletter">Kontakt</a></li>
+          <li><a href="#vorteile">Versand &amp; Rückgabe</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><button type="button" class="footer__link-btn" data-account-trigger>Bestellstatus</button></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Rechtliches</h4>
+        <ul>
+          <li><a href="#">Impressum</a></li>
+          <li><a href="#">Datenschutz</a></li>
+          <li><a href="#">AGB</a></li>
+          <li><a href="#">Widerrufsrecht</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 NovaShop. Alle Rechte vorbehalten.</span>
+      <div class="payment-icons">
+        <span class="payment-chip">Visa</span>
+        <span class="payment-chip">Mastercard</span>
+        <span class="payment-chip">PayPal</span>
+        <span class="payment-chip">Apple Pay</span>
+        <span class="payment-chip">Klarna</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/products.js"></script>
+<script src="js/product-overrides.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/render.js"></script>
+<script src="js/account.js"></script>
+<script src="js/cookie-consent.js"></script>
+<script src="js/scroll-nav.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
