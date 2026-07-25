@@ -18,6 +18,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Custom-URL-Scheme für den Rücksprung aus dem Stripe-Checkout, siehe
+                 js/capacitor-bridge.js und server/routes/checkout.js. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="novashop" android:host="checkout-return" />
+            </intent-filter>
         </activity>
 
         <provider

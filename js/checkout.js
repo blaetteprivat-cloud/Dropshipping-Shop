@@ -182,6 +182,7 @@
           items: summary.items.map((it) => ({ id: it.id, qty: it.qty })),
           email,
           address: { firstName, lastName, street, zip, city, country },
+          platform: window.NovaCapacitor && window.NovaCapacitor.isNative ? "capacitor" : "web",
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -189,7 +190,14 @@
         errorEl.textContent = data.error || "Die Bestellung konnte nicht gestartet werden. Bitte versuch es erneut.";
         return;
       }
-      window.location.href = data.url;
+      /* In der App NICHT die eingebettete WebView zur Stripe-Zahlungsseite navigieren (dafür lehnt
+         Apple Zahlungs-Flows im Review ab) — stattdessen einen echten In-App-Browser-Tab öffnen,
+         siehe js/capacitor-bridge.js. Im normalen Browser bleibt es bei der bisherigen Weiterleitung. */
+      if (window.NovaCapacitor && window.NovaCapacitor.isNative) {
+        window.NovaCapacitor.openCheckout(data.url);
+      } else {
+        window.location.href = data.url;
+      }
     } catch (err) {
       errorEl.textContent = "Die Bestellung konnte nicht gestartet werden. Bitte versuch es erneut.";
     } finally {

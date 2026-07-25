@@ -4,6 +4,7 @@ const { currentUser } = require("../middleware/auth");
 const { getStripe } = require("../lib/stripe");
 const { fulfillPaidOrder } = require("../lib/fulfill-order");
 const { ORDER_STATUS } = require("../lib/order-status");
+const { buildRedirectUrls } = require("../lib/checkout-redirect");
 
 const router = express.Router();
 
@@ -95,14 +96,15 @@ router.post("/create-session", async (req, res, next) => {
     });
 
     const baseUrl = (process.env.APP_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+    const { successUrl, cancelUrl } = buildRedirectUrls(baseUrl, String(body.platform) === "capacitor");
     let session;
     try {
       session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: lineItems,
         customer_email: email,
-        success_url: `${baseUrl}/order-success.html?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/shop.html`,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         metadata: { orderId: String(order.id), orderNumber: order.orderNumber },
         expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_MINUTES * 60,
       });
