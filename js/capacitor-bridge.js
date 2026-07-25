@@ -17,19 +17,40 @@
    - Android-Zurück-Taste: Seitenverlauf zurück statt die App sofort zu
      schließen.
    - Statusleiste an das dunkle Farbschema der Seite anpassen.
+   - Haptisches Feedback bei zentralen Aktionen.
+
+   openCheckout()/haptic() werden IMMER an window.NovaCapacitor gehängt (auch auf der
+   Website), damit checkout.js/render.js sie ohne zusätzliche isNative-Prüfung aufrufen
+   können — jede der beiden Funktionen prüft `isNative` selbst als Allererstes, BEVOR sie
+   auf Plugins/Browser/Haptics zugreift. Das ist wichtig: Plugins/Browser/Haptics werden nur
+   im native Zweig unten überhaupt zugewiesen (const, kein hoisting des Werts) — ein Zugriff
+   darauf ohne vorherige isNative-Prüfung würde auf der Website mit einem
+   "Cannot access before initialization"-Fehler abstürzen.
    =========================================================== */
 (function (global) {
   "use strict";
 
   const Capacitor = global.Capacitor;
   const isNative = !!(Capacitor && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform());
+  const Plugins = isNative ? Capacitor.Plugins || {} : {};
+  const { App, Browser, StatusBar, Haptics } = Plugins;
 
-  global.NovaCapacitor = { isNative, openCheckout };
+  function openCheckout(url) {
+    if (!isNative || !Browser) {
+      global.location.href = url; // Web, oder Plugin ausnahmsweise nicht verfügbar
+      return;
+    }
+    Browser.open({ url });
+  }
+
+  function haptic(style) {
+    if (!isNative || !Haptics) return;
+    Haptics.impact({ style: style || "LIGHT" }).catch(() => {});
+  }
+
+  global.NovaCapacitor = { isNative, openCheckout, haptic };
 
   if (!isNative) return;
-
-  const Plugins = Capacitor.Plugins || {};
-  const { App, Browser, StatusBar } = Plugins;
 
   /* -------------------- Statusleiste an dunkles Theme anpassen -------------------- */
   if (StatusBar) {
@@ -55,7 +76,7 @@
     });
   }
 
-  /* -------------------- Stripe-Checkout im In-App-Browser + Rücksprung --------------------
+  /* -------------------- Stripe-Checkout: Rücksprung nach Zahlungsabschluss --------------------
      Custom-URL-Scheme "novashop://checkout-return", server/routes/checkout.js setzt es als
      success_url/cancel_url, wenn die Anfrage mit platform:"capacitor" kam (siehe checkout.js).
      Bei Abbruch (status=cancel) reicht es, den Browser-Tab zu schließen — die App zeigt darunter
@@ -64,14 +85,6 @@
      Browser-Tab-Kontext) läuft. */
   const CHECKOUT_SCHEME = "novashop:";
   const CHECKOUT_HOST = "checkout-return";
-
-  function openCheckout(url) {
-    if (!Browser) {
-      global.location.href = url; // Fallback, falls das Plugin ausnahmsweise fehlt
-      return;
-    }
-    Browser.open({ url });
-  }
 
   if (App) {
     App.addListener("appUrlOpen", ({ url }) => {

@@ -64,6 +64,7 @@ document.addEventListener("click", (e) => {
     if (after === before) {
       showToast("Maximale Menge erreicht", "Es ist nicht mehr Lagerbestand verfügbar.");
     } else if (product) {
+      if (window.NovaCapacitor) window.NovaCapacitor.haptic();
       showToast("Zum Warenkorb hinzugefügt", product.name);
     }
     return;

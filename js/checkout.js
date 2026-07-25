@@ -194,6 +194,7 @@
          Apple Zahlungs-Flows im Review ab) — stattdessen einen echten In-App-Browser-Tab öffnen,
          siehe js/capacitor-bridge.js. Im normalen Browser bleibt es bei der bisherigen Weiterleitung. */
       if (window.NovaCapacitor && window.NovaCapacitor.isNative) {
+        window.NovaCapacitor.haptic();
         window.NovaCapacitor.openCheckout(data.url);
       } else {
         window.location.href = data.url;
