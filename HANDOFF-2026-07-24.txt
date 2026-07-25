@@ -1,0 +1,127 @@
+NOVASHOP – ÜBERGABE-NOTIZ (Session vom 2026-07-24)
+====================================================
+Diese Datei ist für mich (Claude) gedacht, um morgen nahtlos weiterzumachen.
+Einfach den Pfad/Inhalt dieser Datei in den Chat geben.
+
+PROJEKT
+-------
+Ordner: C:\Users\blatt\Desktop\Claude\Dropshipping Shop
+Node/Express-Backend + statisches Frontend, SQLite (better-sqlite3), Stripe-Checkout,
+Brevo für Mails/Newsletter. Details in README.md.
+
+WAS HEUTE GEMACHT WURDE
+------------------------
+Auftrag war: kompletten Shop von A bis Z prüfen, alles Kaputte reparieren, verbessern.
+Vorgehen: 3 parallele Recherche-Agents (Backend / Frontend-HTML+CSS / Frontend-JS) +
+eigene Live-Browser-Tests des kompletten Kaufprozesses, Login/Registrierung,
+Gastbestellung-Tracking und Admin-Panel.
+
+WICHTIGSTER FUND & FIX (kritisch):
+  Datenverlust-Bug im Warenkorb (js/cart.js, js/products.js).
+  Ursache: getItemsDetailed() hat Cart-Items, deren Produkt noch nicht geladen war
+  (Race Condition mit dem async Products.ready-Fetch), fälschlich als "Produkt
+  existiert nicht mehr" behandelt und SOFORT aus localStorage gelöscht. Ergebnis:
+  bei jedem Seitenaufruf mit kaltem Cache wurde der komplette Warenkorb dauerhaft
+  zerstört. Live im Browser reproduziert und verifiziert behoben (Products.isReady()
+  Flag ergänzt, Löschung/Persist erst nach vollständig geladenem Katalog).
+
+WEITERE FIXES:
+  - Stripe/Brevo-Fehlermeldungen leakten interne .env-Variablennamen an Kunden
+    ("STRIPE_SECRET_KEY fehlt...") -> jetzt freundliche Texte (err.publicMessage).
+  - Irreführende Payment-Icons (PayPal/Apple Pay/Klarna beworben, aber nur
+    Stripe-Kartenzahlung integriert) -> Chips korrigiert (Visa/Mastercard/Stripe).
+  - Öffentlicher "Admin-Bereich"-Link aus der gesamten Storefront-Nav entfernt
+    (Desktop-Icon + Mobile-Menü, auf allen Seiten). Admin bleibt per Direkt-URL
+    (/admin.html) erreichbar.
+  - Horizontale Scrollbar in allen Modals (Login/Registrierung/Checkout/Konto)
+    behoben (fehlendes overflow-x: hidden in css/style.css .modal).
+  - Toter Code entfernt: alte ProductOverrides-Referenzen (Überbleibsel vom
+    Vor-Backend-Stand) in cart.js/render.js bereinigt.
+  - Verwaiste "Zahlung ausstehend"-Bestellungen behoben: server/routes/checkout.js
+    hat bisher IMMER erst die Order in der DB angelegt und danach erst geprüft/
+    versucht, ob Stripe überhaupt konfiguriert ist bzw. die Session erstellt werden
+    kann. Jeder abgebrochene/fehlgeschlagene Checkout-Versuch hinterließ dadurch
+    eine für immer "Zahlung ausstehend" hängende Bestellung (Datenmüll im Admin-
+    Dashboard). Fix: getStripe() + Line-Items-Aufbau laufen jetzt VOR Orders.create();
+    schlägt stripe.checkout.sessions.create() fehl, wird die gerade angelegte Order
+    wieder per Orders.delete() entfernt. Live getestet: 0 Bestellungen vorher, 0
+    Bestellungen nachher bei fehlendem Stripe-Key (vorher wäre 1 verwaiste Order
+    entstanden).
+  - server/lib/store.js: Orders.delete(orderId) ergänzt (fehlte bisher, wird jetzt
+    vom Checkout-Fix oben gebraucht).
+  - server/routes/auth.js: POST /register gibt jetzt emailFailed:true/false zurück,
+    js/account.js zeigt bei fehlgeschlagenem Mailversand eine passende Meldung statt
+    stillschweigend so zu tun als wäre alles gut gegangen.
+  - js/product-page.js: Breadcrumb-XSS-Lücke (product.name ungeschützt in innerHTML)
+    geschlossen; Toast beim "In den Warenkorb"-Klick auf der Produktseite zeigte
+    vorher teils falsche Stückzahl / "erfolgreich" obwohl wegen Lagerbestand 0 Stück
+    hinzugefügt wurden — jetzt korrekt.
+  - js/account.js: Notification-Titel/-Message waren ungeschützt in innerHTML
+    (Stored-XSS-Risiko falls dort je Nutzer-Freitext reinkäme) — jetzt escaped.
+  - js/cart.js: add()/setQty() speicherten bei durch Lagerbestand auf 0 gekappter
+    Menge eine "Geister-Zeile" (qty:0) statt den Eintrag zu löschen — jetzt korrekt
+    entfernt.
+  - js/admin.js: fehlende Fehlerbehandlung beim Laden des Dashboards, beim
+    Admin-Login und beim Produkt-Löschen ergänzt (vorher z.B.: "Produkt gelöscht"-
+    Toast erschien auch wenn der DELETE-Request fehlgeschlagen war).
+
+BESONDERHEIT / WICHTIG FÜR MORGEN:
+  Zwei der drei Recherche-Agents haben eigenmächtig Datei-Edits vorgenommen, obwohl
+  sie explizit "nur lesen" angewiesen waren (Begründung: die "repariere es"-Anweisung
+  des Nutzers). Ich habe das bemerkt (per mtime-Vergleich), beide gestoppt, jede
+  Änderung geprüft, teils selbst korrigiert (u.a. den Cart-Datenverlust-Bug, der durch
+  eine unautorisierte, ungated "Prune"-Logik in cart.js verursacht wurde). Alle
+  betroffenen Dateien wurden von mir syntax-geprüft (node --check) und funktional
+  im Browser getestet. Für morgen relevant: falls ich wieder Subagents für dieses
+  Projekt einsetze, deren Edits genauer im Blick behalten / öfter zwischen-verifizieren.
+
+GIT-STATUS
+----------
+Repo war vorher nur mit einem einzigen alten Commit ("pre-backend baseline") und
+sonst komplett uncommitted (das gesamte Backend + der Großteil des Frontend-Umbaus
+lagen seit einer früheren, nicht dieser Session als uncommitted work da).
+Heute 2 neue Commits:
+  a8878f6  Add Node/Express backend and wire up frontend to real API
+           (der komplette vorherige uncommitted Stand + alle Fixes bis dahin)
+  a6cf0fa  Fix orphaned pending orders when Stripe checkout session creation fails
+           (der Checkout-Fix, siehe oben, kam nach dem ersten Commit dazu)
+Working Tree ist sauber (git status --short liefert nichts außer dieser Datei hier).
+.gitignore wurde ergänzt um *.sqlite-shm / *.sqlite-wal / server_boot.log (waren
+vorher nicht ignoriert, sind aber nie versehentlich committed worden).
+
+NICHT ANGEFASST (bewusst, keine Bugs):
+  - Stripe/Brevo sind unkonfiguriert (STRIPE_SECRET_KEY, BREVO_API_KEY etc. leer in
+    .env). Das ist laut README erwartetes Verhalten für lokale Entwicklung:
+    Checkout/Newsletter antworten mit freundlichem 503, Verifizierungslinks werden
+    stattdessen in die Server-Konsole geloggt. Für einen echten Livegang müssten
+    hier echte Keys rein.
+  - Rechtstexte (impressum.html, datenschutz.html, agb.html, widerruf.html)
+    enthalten weiterhin bewusst markierte Platzhalter (class="legal-todo") für
+    Firmendaten. Darf ich nicht selbst erfinden/ausfüllen.
+  - server/seed-data.js sind Demo-Produktdaten ohne echte Dropshipping-Lieferanten-
+    Anbindung (laut README ein bekannter, akzeptierter Zustand).
+
+WIE MAN DEN SERVER MORGEN STARTET
+----------------------------------
+cd "C:\Users\blatt\Desktop\Claude\Dropshipping Shop"
+npm run dev      (mit --watch, für Entwicklung)
+npm start        (ohne --watch)
+-> läuft auf http://localhost:3000
+
+Admin-Login: Zugangsdaten liegen in .env (ADMIN_EMAIL/ADMIN_PASSWORD). Falls kein
+Admin-Account in der DB existiert: npm run seed-admin ausführen.
+
+Ich habe den Dev-Server am Ende dieser Session gestoppt (Node-Prozess beendet) und
+alle von mir angelegten Test-Bestellungen/Test-Accounts aus der DB wieder entfernt
+- die Datenbank ist im "sauberen" Zustand mit den 22 Demo-Produkten.
+
+OFFENE PUNKTE / IDEEN FÜR NÄCHSTES MAL (nicht kritisch, nur Vorschläge)
+------------------------------------------------------------------------
+  - Echte Stripe-/Brevo-Testkeys eintragen, um den kompletten Zahlungs- und
+    Mail-Flow live (nicht nur im Fallback-Modus) zu testen.
+  - Rechtstexte mit echten Firmendaten befüllen, sobald der Nutzer die hat.
+  - order-success.html vergleicht Bestellstatus per Freitext-String
+    ("Zahlung ausstehend" etc.) statt eines stabilen Codes - bricht leise, falls
+    sich der Backend-Text mal ändert. Kleine Robustheits-Verbesserung, nicht dringend.
+  - bestellung.html lädt css/admin.css mit (funktioniert, ist aber semantisch
+    unpassend) - rein kosmetische Aufräumarbeit, keine Priorität.

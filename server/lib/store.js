@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const db = require("../db");
+const { ORDER_STATUS, statusCode } = require("./order-status");
 
 /* ------------------------------- Users ------------------------------- */
 
@@ -147,6 +148,7 @@ function rowToOrder(row, items) {
     guestName: row.guest_name,
     guestEmail: row.guest_email,
     status: row.status,
+    statusCode: statusCode(row.status),
     subtotal: row.subtotal,
     shippingCost: row.shipping_cost,
     total: row.total,
@@ -169,7 +171,7 @@ const Orders = {
     }
     const insertOrder = db.prepare(`
       INSERT INTO orders (order_number, user_id, guest_name, guest_email, status, subtotal, shipping_cost, total, address_json)
-      VALUES (@orderNumber, @userId, @guestName, @guestEmail, 'Zahlung ausstehend', @subtotal, @shippingCost, @total, @addressJson)
+      VALUES (@orderNumber, @userId, @guestName, @guestEmail, '${ORDER_STATUS.PENDING}', @subtotal, @shippingCost, @total, @addressJson)
     `);
     const insertItem = db.prepare(`
       INSERT INTO order_items (order_id, product_id, name_snapshot, qty, price_snapshot)
@@ -215,18 +217,18 @@ const Orders = {
   },
   markPaid(orderId, { paymentIntentId, paymentMethod }) {
     db.prepare(`
-      UPDATE orders SET status = 'In Bearbeitung', stripe_payment_intent_id = ?, payment_method = ?, updated_at = datetime('now')
-      WHERE id = ? AND status = 'Zahlung ausstehend'
-    `).run(paymentIntentId || null, paymentMethod || null, orderId);
+      UPDATE orders SET status = ?, stripe_payment_intent_id = ?, payment_method = ?, updated_at = datetime('now')
+      WHERE id = ? AND status = ?
+    `).run(ORDER_STATUS.PROCESSING, paymentIntentId || null, paymentMethod || null, orderId, ORDER_STATUS.PENDING);
   },
   delete(orderId) {
     db.prepare("DELETE FROM orders WHERE id = ?").run(orderId);
   },
   markFailed(orderId) {
     db.prepare(`
-      UPDATE orders SET status = 'Zahlung fehlgeschlagen', updated_at = datetime('now')
-      WHERE id = ? AND status = 'Zahlung ausstehend'
-    `).run(orderId);
+      UPDATE orders SET status = ?, updated_at = datetime('now')
+      WHERE id = ? AND status = ?
+    `).run(ORDER_STATUS.FAILED, orderId, ORDER_STATUS.PENDING);
   },
   updateStatus(orderId, status) {
     db.prepare("UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?").run(status, orderId);

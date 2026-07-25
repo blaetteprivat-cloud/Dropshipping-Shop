@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const Database = require("better-sqlite3");
+const { ORDER_STATUS } = require("./lib/order-status");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -48,7 +49,7 @@ db.exec(`
     user_id INTEGER REFERENCES users(id),
     guest_name TEXT,
     guest_email TEXT,
-    status TEXT NOT NULL DEFAULT 'Zahlung ausstehend',
+    status TEXT NOT NULL DEFAULT '${ORDER_STATUS.PENDING}',
     subtotal REAL NOT NULL,
     shipping_cost REAL NOT NULL,
     total REAL NOT NULL,

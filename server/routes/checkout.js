@@ -3,6 +3,7 @@ const { Products, Orders } = require("../lib/store");
 const { currentUser } = require("../middleware/auth");
 const { getStripe } = require("../lib/stripe");
 const { fulfillPaidOrder } = require("../lib/fulfill-order");
+const { ORDER_STATUS } = require("../lib/order-status");
 
 const router = express.Router();
 
@@ -117,7 +118,7 @@ router.get("/session/:sessionId", async (req, res) => {
   let order = Orders.findByStripeSessionId(req.params.sessionId);
   if (!order) return res.status(404).json({ error: "Bestellung nicht gefunden." });
 
-  if (order.status === "Zahlung ausstehend") {
+  if (order.status === ORDER_STATUS.PENDING) {
     try {
       const stripe = getStripe();
       const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
@@ -132,6 +133,7 @@ router.get("/session/:sessionId", async (req, res) => {
   res.json({
     orderNumber: order.orderNumber,
     status: order.status,
+    statusCode: order.statusCode,
     total: order.total,
     items: order.items,
     email: order.guestEmail,

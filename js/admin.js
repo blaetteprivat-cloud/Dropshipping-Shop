@@ -633,9 +633,9 @@
         <td>${o.items.reduce((sum, it) => sum + it.qty, 0)} Artikel</td>
         <td>${formatPrice(o.total)}</td>
         <td>
-          <select class="admin-select" data-order-status="${o.id}" aria-label="Status für Bestellung ${o.orderNumber}" ${o.status === "Zahlung ausstehend" || o.status === "Zahlung fehlgeschlagen" ? "disabled" : ""}>
+          <select class="admin-select" data-order-status="${o.id}" aria-label="Status für Bestellung ${o.orderNumber}" ${o.statusCode === "pending" || o.statusCode === "failed" ? "disabled" : ""}>
             ${ORDER_STATUSES.map((s) => `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
-            ${o.status === "Zahlung ausstehend" || o.status === "Zahlung fehlgeschlagen" ? `<option value="${o.status}" selected>${o.status}</option>` : ""}
+            ${o.statusCode === "pending" || o.statusCode === "failed" ? `<option value="${o.status}" selected>${o.status}</option>` : ""}
           </select>
         </td>
       </tr>`

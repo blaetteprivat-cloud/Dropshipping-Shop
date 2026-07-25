@@ -80,9 +80,9 @@
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Bestellung nicht gefunden.");
 
-    if (data.status === "Zahlung ausstehend") {
+    if (data.statusCode === "pending") {
       setState({ tone: "pending", heading: "Zahlung wird noch bestätigt …", message: "Bestellung " + data.orderNumber + " wartet auf die Zahlungsbestätigung. Lade diese Seite in ein paar Sekunden neu." });
-    } else if (data.status === "Zahlung fehlgeschlagen") {
+    } else if (data.statusCode === "failed") {
       setState({ tone: "error", heading: "Zahlung fehlgeschlagen", message: "Bestellung " + data.orderNumber + " konnte nicht bezahlt werden. Bitte versuch es erneut." });
     } else {
       Cart.clear();

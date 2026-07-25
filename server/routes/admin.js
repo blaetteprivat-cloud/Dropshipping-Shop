@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const rateLimit = require("express-rate-limit");
 const { Users, Products, Orders, Notifications } = require("../lib/store");
 const { currentUser, requireAdmin, publicUser } = require("../middleware/auth");
+const { ORDER_STATUS } = require("../lib/order-status");
 
 const router = express.Router();
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
@@ -95,7 +96,7 @@ router.delete("/products/:id", (req, res) => {
 });
 
 /* -------------------- Bestellungen -------------------- */
-const ORDER_STATUSES = ["In Bearbeitung", "Versendet", "Abgeschlossen", "Storniert"];
+const ORDER_STATUSES = [ORDER_STATUS.PROCESSING, ORDER_STATUS.SHIPPED, ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELLED];
 
 router.get("/orders", (req, res) => {
   const orders = Orders.listAll().map((o) => {
