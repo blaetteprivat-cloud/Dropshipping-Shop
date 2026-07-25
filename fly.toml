@@ -1,0 +1,32 @@
+# Fly.io-Konfiguration für NovaShop — siehe README.md "Welches Hosting?".
+# Setup (auf jedem Rechner mit installierter flyctl, kein Mac nötig):
+#   fly launch --no-deploy   (übernimmt diese Datei, fragt nach Region/App-Namen)
+#   fly volumes create novashop_data --size 1 --region <deine-region>
+#   fly secrets set SESSION_SECRET=... STRIPE_SECRET_KEY=... STRIPE_WEBHOOK_SECRET=... \
+#     BREVO_API_KEY=... BREVO_SENDER_EMAIL=... BREVO_SENDER_NAME=... BREVO_NEWSLETTER_LIST_ID=... \
+#     APP_BASE_URL=https://<app-name>.fly.dev
+#   fly deploy
+
+app = "novashop-CHANGE-ME"   # muss global eindeutig sein — vor dem ersten `fly launch` anpassen
+primary_region = "fra"        # Frankfurt; nächstgelegene Fly.io-Region anpassen falls gewünscht
+
+[build]
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+
+[[mounts]]
+  source = "novashop_data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

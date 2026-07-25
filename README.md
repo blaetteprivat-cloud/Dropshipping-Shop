@@ -101,6 +101,9 @@ Hetzner-VPS mit [Coolify](https://coolify.io) (selbst gehostet, kostenlos). **Vo
 für diese App abgeraten** — das dort nötige GCS-FUSE-Volume unterstützt kein Datei-Locking bei
 gleichzeitigen Schreibzugriffen, ein echtes Korruptionsrisiko für Bestellungen/Sessions.
 
+Eine fertige [`fly.toml`](fly.toml) liegt bereits bei (App-Name-Platzhalter vor dem ersten
+`fly launch` anpassen, Setup-Befehle stehen als Kommentar in der Datei).
+
 ## iOS-/Android-App
 
 Siehe [`MOBILE_APP.md`](MOBILE_APP.md) — das Repo ist mit [Capacitor](https://capacitorjs.com)
