@@ -66,8 +66,8 @@ Dieses Repo ist technisch lauffähig, aber inhaltlich noch nicht produktionsreif
   juristisch prüfen lassen.
 - **Produktdaten** (`server/seed-data.js`) sind Demo-Daten ohne echte Lieferanten-Anbindung —
   es gibt aktuell keine automatisierte Bestellweiterleitung an einen Dropshipping-Lieferanten.
-- **Kein Deployment-Ziel festgelegt** — Dockerfile liegt bei, aber Hosting/Domain/TLS sind
-  Betreiber-Entscheidungen.
+- **Kein Deployment-Ziel festgelegt** — Dockerfile liegt bei, Hosting-Vergleich + Empfehlung
+  siehe Abschnitt „Welches Hosting?" unten, aber Domain/TLS/Account sind Betreiber-Entscheidungen.
 - Weitere Details siehe Projekt-Historie/Audit.
 
 ## Deployment (Docker)
@@ -78,6 +78,28 @@ docker run -p 3000:3000 --env-file .env -v novashop-data:/app/data novashop
 ```
 
 Das Volume für `/app/data` ist nötig, damit die SQLite-Datenbank Container-Neustarts übersteht.
+
+### Welches Hosting?
+
+Die Datenbank ist eine lokale SQLite-Datei (`better-sqlite3`, WAL-Modus) — das schränkt die
+Auswahl ein: Plattformen mit rein flüchtigem Dateisystem (klassisches "Serverless", z. B. Vercel
+Functions) fallen damit raus, echte persistente Volumes sind Pflicht.
+
+| Anbieter | Kosten/Monat (kleiner Shop) | Persistentes Volume | Domain + HTTPS | Deploy |
+|---|---|---|---|---|
+| **Fly.io** (empfohlen) | ca. 7–10 $ | Ja, nativ (`fly volumes create`) | Automatisch | `fly deploy` liest das vorhandene `Dockerfile` direkt |
+| Railway | ca. 5–10 $ | Ja | Automatisch | `git push` (Auto-Deploy) oder CLI |
+| Render | ca. 7–8 $ | Ja (nur bezahlte Instanzen) | Automatisch | `git push` (Auto-Deploy) |
+| Hetzner VPS + Coolify | ca. 5 $ (günstigste Option) | Ja (lokale Disk) | Über Coolify automatisiert | `git push`, nach einmaligem Coolify-Setup |
+| Google Cloud Run | — **nicht empfohlen** | Nur über GCS-FUSE-Mount, **ohne Datei-Locking bei gleichzeitigen Schreibzugriffen** — Korruptionsrisiko für die SQLite-Datenbank | Automatisch | `gcloud run deploy` |
+
+**Empfehlung: Fly.io.** Nimmt das bestehende `Dockerfile` praktisch unverändert, `fly volumes
+create` + eine Zeile in `fly.toml` lösen die SQLite-Persistenz direkt (kein Workaround nötig, im
+Gegensatz zu Cloud Run), HTTPS + eigene Domain sind automatisch, Secrets ein einzelner
+`fly secrets set`-Befehl. Günstigste Alternative bei etwas mehr Einrichtungsaufwand: eigener
+Hetzner-VPS mit [Coolify](https://coolify.io) (selbst gehostet, kostenlos). **Von Cloud Run wird
+für diese App abgeraten** — das dort nötige GCS-FUSE-Volume unterstützt kein Datei-Locking bei
+gleichzeitigen Schreibzugriffen, ein echtes Korruptionsrisiko für Bestellungen/Sessions.
 
 ## iOS-/Android-App
 
