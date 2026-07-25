@@ -93,10 +93,17 @@ function runStaleOrderSweep() {
     console.error("Fehler beim Aufräumen verwaister Bestellungen:", err);
   }
 }
-setInterval(runStaleOrderSweep, 15 * 60 * 1000);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`NovaShop-Server läuft auf http://localhost:${PORT}`);
-  runStaleOrderSweep();
-});
+/* Nur beim direkten Start (`node server/index.js` / `npm start`) horchen und den Sweep
+   einplanen — beim require() aus den Integrationstests (test/*.test.js) soll nur die
+   fertig konfigurierte app zurückgegeben werden, ohne einen echten Port zu belegen. */
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`NovaShop-Server läuft auf http://localhost:${PORT}`);
+    runStaleOrderSweep();
+  });
+  setInterval(runStaleOrderSweep, 15 * 60 * 1000);
+}
+
+module.exports = app;
