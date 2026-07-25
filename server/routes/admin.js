@@ -82,9 +82,22 @@ router.put("/products/:id", (req, res) => {
     patch.stock = stock;
   }
   if (b.active !== undefined) patch.active = !!b.active;
-  if (b.name !== undefined) patch.name = String(b.name).trim();
-  if (b.subtitle !== undefined) patch.subtitle = String(b.subtitle).trim();
-  if (b.categories !== undefined) patch.categories = Array.isArray(b.categories) ? b.categories : [];
+  if (b.name !== undefined) {
+    const name = String(b.name).trim();
+    if (!name) return res.status(400).json({ error: "Der Produktname darf nicht leer sein." });
+    patch.name = name;
+  }
+  if (b.subtitle !== undefined) {
+    const subtitle = String(b.subtitle).trim();
+    if (!subtitle) return res.status(400).json({ error: "Die Kurzbeschreibung darf nicht leer sein." });
+    patch.subtitle = subtitle;
+  }
+  if (b.categories !== undefined) {
+    if (!Array.isArray(b.categories) || b.categories.length === 0) {
+      return res.status(400).json({ error: "Bitte mindestens eine Kategorie auswählen." });
+    }
+    patch.categories = b.categories;
+  }
 
   const product = Products.update(req.params.id, patch);
   res.json({ product });
