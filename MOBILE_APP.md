@@ -66,8 +66,26 @@ durch (auch die Icon-/Splash-Generierung), Ergebnis liegt fertig im Repo:
   in `index.html`/`shop.html`/`product.html`/`bestellung.html` — macht den Shop nebenbei auch als
   installierbare PWA nutzbar (Android „Zum Startbildschirm hinzufügen" funktioniert damit schon
   jetzt, unabhängig vom Capacitor-Weg).
+- `js/capacitor-bridge.js` — auf der Website ein kompletter No-Op (aktiv nur, wenn
+  `window.Capacitor` existiert, also innerhalb der App), erledigt:
+  - **Stripe-Checkout im echten In-App-Browser-Tab statt in der eingebetteten WebView** (dafür
+    lehnt Apple Zahlungs-Flows im Review ab, siehe unten) + Rücksprung über das Custom-URL-Scheme
+    `novashop://checkout-return` zurück zur echten Erfolgsseite in der Haupt-WebView.
+  - Android-Zurück-Taste (Seitenverlauf zurück statt App sofort schließen)
+  - Statusleiste passend zum dunklen Farbschema
+  - Externe Links (z. B. Widerrufsbedingungen, `target="_blank"`) im In-App-Browser statt in
+    einer zweiten WebView
+  - Haptisches Feedback bei "In den Warenkorb" und beim Absenden des Checkout-Formulars
+  - `js/connectivity.js` (unabhängig davon, läuft auch auf der Website) zeigt ein Banner bei
+    fehlender Internetverbindung — ohne das bliebe die App sonst einfach reaktionslos.
+- `server/lib/checkout-redirect.js` + Anpassung in `server/routes/checkout.js`: wählt
+  `success_url`/`cancel_url` für Stripe je nachdem, ob die Anfrage aus der App kam
+  (`platform:"capacitor"`, von `js/checkout.js` automatisch mitgeschickt) oder aus dem Browser.
+- `ios/App/App/Info.plist` + `android/app/src/main/AndroidManifest.xml`: Custom-URL-Scheme
+  `novashop://` für den Checkout-Rücksprung registriert.
 - `package.json` → `devDependencies`: `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`,
-  `@capacitor/android`, `@capacitor/assets`. Scripts `npm run cap:sync` und `npm run cap:assets`.
+  `@capacitor/android`, `@capacitor/assets`, `@capacitor/app`, `@capacitor/browser`,
+  `@capacitor/status-bar`, `@capacitor/haptics`. Scripts `npm run cap:sync` und `npm run cap:assets`.
 - `.gitignore`/`.dockerignore` ergänzt: lokale Xcode-/Gradle-Build-Artefakte (`xcuserdata`,
   `local.properties`, `build/`-Ordner) werden nicht mitversioniert, `www/`, `resources/`, `ios/`,
   `android/` wandern nicht ins Server-Docker-Image.
@@ -163,13 +181,23 @@ fest, bevor du zum ersten Mal hochlädst. Passe sie in `capacitor.config.json` (
   Login anbietet (Guideline 4.8 greift nur, wenn *zusätzlich* ein Drittanbieter-/Social-Login wie
   Google/Facebook angeboten wird — das ist hier nicht der Fall).
 - **Guideline 4.2 „Minimum Functionality"** ist das größte Rejection-Risiko bei WebView-Apps
-  ("nur eine Website im Wrapper"). Reduziert das Risiko:
-  - Eigenes App-Icon/Splash-Screen statt Browser-Chrome (schon vorbereitet, s. o.)
+  ("nur eine Website im Wrapper"). Bereits umgesetzt, um das Risiko zu senken:
+  - Eigenes App-Icon/Splash-Screen statt Browser-Chrome
   - Kein sichtbarer Browser-UI-Rahmen (URL-Leiste etc.) — bei Capacitor standardmäßig so
-  - Optional, aber empfehlenswert vor der Einreichung: mindestens eine native Funktion ergänzen,
-    z. B. Push-Benachrichtigungen für Bestellstatus-Updates (`@capacitor/push-notifications`) oder
-    Face-ID/Touch-ID-Login (`@capacitor/biometric`) — beides baut auf der bestehenden
-    Notifications-/Auth-Logik im Backend auf und ist eine spätere, klar abgegrenzte Erweiterung.
+  - Native Statusleiste, Android-Zurück-Taste, haptisches Feedback, Offline-Hinweis
+    (`js/capacitor-bridge.js` + `js/connectivity.js`)
+  - Zahlung läuft über einen echten In-App-Browser-Tab statt der eingebetteten WebView (siehe
+    oben) — genau der Punkt, den Stripes eigene Dokumentation für Guideline 4.2 als Risiko nennt
+- **Zwei native Funktionen bewusst (noch) nicht gebaut**, weil sie zwingend eigene externe
+  Accounts voraussetzen, die nur du anlegen kannst, und ohne die ich den Code nicht gegen etwas
+  Echtes hätte testen können:
+  - **Push-Benachrichtigungen bei Bestellstatus-Änderungen** (`@capacitor/push-notifications`) —
+    braucht ein Firebase-Projekt (Android/FCM) und ein Apple-Push-Zertifikat (APNs, hängt am
+    Developer-Account). Baut technisch auf der bestehenden `Notifications.create()`-Logik in
+    `server/lib/fulfill-order.js`/`server/routes/admin.js` auf — sag Bescheid, sobald die Accounts
+    stehen, dann ergänze ich Backend-Endpunkt + Plugin-Integration.
+  - **Face-ID/Touch-ID-Login** — technisch unabhängig von externen Accounts machbar, aber ein
+    größerer Eingriff in den bestehenden Login-Flow; ebenfalls auf Zuruf.
 - **Rechtstexte vollständig** (`impressum.html`, `datenschutz.html`, `agb.html`, `widerruf.html`)
   — Apple-Reviewer prüfen diese aktiv bei einem Shop mit Nutzerkonten/Zahlungen.
 
