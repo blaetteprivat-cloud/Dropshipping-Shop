@@ -243,11 +243,35 @@
   const cartSummaryEl = document.getElementById("cart-summary");
   const cartSubtotalEl = document.getElementById("cart-subtotal");
   const cartShippingEl = document.getElementById("cart-shipping");
+  const cartDeliveryEl = document.getElementById("cart-delivery");
   const cartTotalEl = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkout-btn");
+  const shippingProgressEl = document.getElementById("cart-shipping-progress");
+  const shippingProgressFillEl = document.getElementById("cart-shipping-progress-fill");
+  const shippingProgressTextEl = document.getElementById("cart-shipping-progress-text");
+
+  function renderShippingProgress(summary) {
+    if (!shippingProgressEl) return;
+    if (summary.items.length === 0) {
+      shippingProgressEl.hidden = true;
+      return;
+    }
+    shippingProgressEl.hidden = false;
+    const percent = Math.min(100, (summary.subtotal / summary.threshold) * 100);
+    shippingProgressFillEl.style.width = percent + "%";
+    if (summary.shippingFree) {
+      shippingProgressEl.setAttribute("data-complete", "1");
+      shippingProgressTextEl.textContent = "Kostenloser Versand freigeschaltet";
+    } else {
+      shippingProgressEl.removeAttribute("data-complete");
+      const remaining = summary.threshold - summary.subtotal;
+      shippingProgressTextEl.textContent = `Noch ${formatPrice(remaining)} bis zum kostenlosen Versand`;
+    }
+  }
 
   function renderCart() {
     const summary = Cart.getSummary();
+    renderShippingProgress(summary);
     if (summary.items.length === 0) {
       cartItemsEl.innerHTML = `
         <div class="cart-empty">
@@ -287,6 +311,7 @@
     cartShippingEl.innerHTML = summary.shippingFree
       ? '<span class="value--free">Kostenlos</span>'
       : formatPrice(summary.shippingCost) + ` (ab ${formatPrice(summary.threshold)} kostenlos)`;
+    if (cartDeliveryEl) cartDeliveryEl.textContent = deliveryEstimateText(1, 3);
     cartTotalEl.textContent = formatPrice(summary.total);
   }
   renderCart();

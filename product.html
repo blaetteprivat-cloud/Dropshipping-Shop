@@ -175,6 +175,13 @@
           </div>
           <div class="products__grid" id="related-grid"></div>
         </section>
+
+        <section class="related" id="recently-viewed-section" hidden>
+          <div class="related__header">
+            <h2>Kürzlich angesehen</h2>
+          </div>
+          <div class="products__grid" id="recently-viewed-grid"></div>
+        </section>
       </div>
 
       <!-- ============ WARENKORB ============ -->
@@ -189,9 +196,14 @@
           </button>
         </div>
         <div class="cart-items" id="cart-items"></div>
+        <div class="cart-shipping-progress" id="cart-shipping-progress" hidden>
+          <div class="cart-shipping-progress__bar"><span id="cart-shipping-progress-fill"></span></div>
+          <p id="cart-shipping-progress-text"></p>
+        </div>
         <div class="cart-summary" id="cart-summary" hidden>
           <div class="cart-summary__row"><span>Zwischensumme</span><span id="cart-subtotal">0,00 €</span></div>
           <div class="cart-summary__row"><span>Versand</span><span id="cart-shipping">Kostenlos</span></div>
+          <div class="cart-summary__row"><span>Lieferung</span><span id="cart-delivery">—</span></div>
           <div class="cart-summary__total"><span>Gesamt</span><strong id="cart-total">0,00 €</strong></div>
         </div>
         <button class="btn btn-primary btn-block" id="checkout-btn" disabled>

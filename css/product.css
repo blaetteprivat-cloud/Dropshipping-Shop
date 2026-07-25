@@ -112,9 +112,54 @@
   border-top: 1px solid var(--color-border);
 }
 @media (min-width: 640px) { .trust-row { grid-template-columns: repeat(4, 1fr); } }
-.trust-row span { display: flex; align-items: center; gap: var(--space-2); font-size: 0.82rem; color: var(--color-text-muted); }
+.trust-row span, .trust-row a { display: flex; align-items: center; gap: var(--space-2); font-size: 0.82rem; color: var(--color-text-muted); }
+.trust-row a { transition: color var(--duration-base) var(--ease-out); }
+.trust-row a:hover { color: var(--color-text); text-decoration: underline; }
 .trust-row .icon { color: var(--color-primary); flex-shrink: 0; }
 
 .related { margin-top: var(--space-8); }
 .related__header { margin-bottom: var(--space-4); }
 .related__header h2 { font-size: 1.2rem; }
+
+/* -------------------- Häufig zusammen gekauft (Bundle) -------------------- */
+.bundle {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.bundle__title { font-size: 1.05rem; margin-bottom: var(--space-4); }
+.bundle__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  max-width: 420px;
+}
+.bundle__plus { color: var(--color-text-faint); align-self: center; margin: -2px 0; }
+.bundle__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.bundle__item input[type="checkbox"] { flex-shrink: 0; accent-color: var(--color-primary); }
+.bundle__item-media {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, var(--tint-1), var(--tint-2));
+}
+.bundle__item-media .icon { width: 55%; height: 55%; color: rgba(255, 255, 255, 0.92); }
+.bundle__item-name { flex: 1; min-width: 0; font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.bundle__item-name:hover { color: var(--color-primary); }
+.bundle__item-price { font-size: 0.82rem; color: var(--color-text-muted); white-space: nowrap; }
+.bundle__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.bundle__total { font-size: 0.95rem; color: var(--color-text-muted); }
+.bundle__total strong { color: var(--color-primary); font-size: 1.1rem; }

@@ -129,7 +129,7 @@
           <div class="product-detail__stock">
             <span class="product-detail__stock-dot ${soldOut ? "is-out" : ""}" aria-hidden="true"></span>
             ${soldOut ? "Ausverkauft" : lowStock ? `Nur noch ${product.stock} auf Lager` : "Auf Lager"}
-            <span class="product-detail__delivery">Lieferzeit 1–3 Werktage</span>
+            <span class="product-detail__delivery">${soldOut ? "" : "Lieferung: " + deliveryEstimateText(1, 3)}</span>
           </div>
 
           <div class="product-detail__actions">
@@ -153,11 +153,13 @@
       </div>
 
       <div class="trust-row">
-        <span><svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg>Kostenloser Versand</span>
+        <span><svg class="icon" aria-hidden="true"><use href="#icon-truck"></use></svg>Kostenloser Versand ab 49€</span>
         <span><svg class="icon" aria-hidden="true"><use href="#icon-shield-check"></use></svg>Sicher bezahlen</span>
-        <span><svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg>Einfache Rückgabe</span>
+        <a href="widerruf.html"><svg class="icon" aria-hidden="true"><use href="#icon-rotate"></use></svg>30 Tage Widerrufsrecht</a>
         <span><svg class="icon" aria-hidden="true"><use href="#icon-headset"></use></svg>Persönlicher Support</span>
-      </div>`;
+      </div>
+
+      <div id="bundle-section"></div>`;
 
     let qty = 1;
     const maxQty = typeof product.stock === "number" ? Math.max(1, product.stock) : Infinity;
@@ -214,13 +216,72 @@
   /* -------------------- Ähnliche Produkte -------------------- */
   const relatedSection = document.getElementById("related-section");
   const relatedGrid = document.getElementById("related-grid");
+  let related = [];
   if (product) {
-    const related = Products.getAll()
+    related = Products.getAll()
       .filter((p) => p.active && p.id !== product.id && p.categories.some((c) => product.categories.includes(c)))
       .slice(0, 4);
     if (related.length > 0) {
       relatedSection.hidden = false;
       relatedGrid.innerHTML = related.map(renderProductCard).join("");
+    }
+  }
+
+  /* -------------------- Häufig zusammen gekauft (echtes Cross-Selling, kein Fake-Rabatt) -------------------- */
+  const bundleSection = document.getElementById("bundle-section");
+  if (product && bundleSection && !(typeof product.stock === "number" && product.stock <= 0)) {
+    const partner = related.find((p) => !(typeof p.stock === "number" && p.stock <= 0));
+    if (partner) {
+      const combined = product.price + partner.price;
+      bundleSection.innerHTML = `
+        <div class="bundle">
+          <h2 class="bundle__title">Häufig zusammen gekauft</h2>
+          <div class="bundle__items">
+            <label class="bundle__item">
+              <input type="checkbox" checked disabled>
+              <span class="bundle__item-media tint-${product.tint}"><svg class="icon" aria-hidden="true"><use href="#${product.icon}"></use></svg></span>
+              <span class="bundle__item-name">${escapeHtml(product.name)}</span>
+              <span class="bundle__item-price">${formatPrice(product.price)}</span>
+            </label>
+            <svg class="icon icon-sm bundle__plus" aria-hidden="true"><use href="#icon-plus"></use></svg>
+            <label class="bundle__item">
+              <input type="checkbox" id="bundle-partner-toggle" checked>
+              <span class="bundle__item-media tint-${partner.tint}"><svg class="icon" aria-hidden="true"><use href="#${partner.icon}"></use></svg></span>
+              <a class="bundle__item-name" href="product.html?id=${partner.id}">${escapeHtml(partner.name)}</a>
+              <span class="bundle__item-price">${formatPrice(partner.price)}</span>
+            </label>
+          </div>
+          <div class="bundle__footer">
+            <span class="bundle__total">Gesamt: <strong id="bundle-total">${formatPrice(combined)}</strong></span>
+            <button class="btn btn-primary" type="button" id="bundle-add">
+              <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-cart"></use></svg>
+              Beide in den Warenkorb
+            </button>
+          </div>
+        </div>`;
+      const partnerToggle = document.getElementById("bundle-partner-toggle");
+      const totalEl = document.getElementById("bundle-total");
+      const addBundleBtn = document.getElementById("bundle-add");
+      partnerToggle.addEventListener("change", () => {
+        totalEl.textContent = formatPrice(partnerToggle.checked ? combined : product.price);
+      });
+      addBundleBtn.addEventListener("click", () => {
+        Cart.add(product.id, 1);
+        if (partnerToggle.checked) Cart.add(partner.id, 1);
+        showToast("Zum Warenkorb hinzugefügt", partnerToggle.checked ? `${product.name} + ${partner.name}` : product.name);
+      });
+    }
+  }
+
+  /* -------------------- Kürzlich angesehen -------------------- */
+  if (product) RecentlyViewed.track(product.id);
+  const recentSection = document.getElementById("recently-viewed-section");
+  const recentGrid = document.getElementById("recently-viewed-grid");
+  if (product && recentSection && recentGrid) {
+    const recent = RecentlyViewed.getRecent(product.id, 4);
+    if (recent.length > 0) {
+      recentSection.hidden = false;
+      recentGrid.innerHTML = recent.map(renderProductCard).join("");
     }
   }
 
@@ -275,11 +336,35 @@
   const cartSummaryEl = document.getElementById("cart-summary");
   const cartSubtotalEl = document.getElementById("cart-subtotal");
   const cartShippingEl = document.getElementById("cart-shipping");
+  const cartDeliveryEl = document.getElementById("cart-delivery");
   const cartTotalEl = document.getElementById("cart-total");
   const checkoutBtn = document.getElementById("checkout-btn");
+  const shippingProgressEl = document.getElementById("cart-shipping-progress");
+  const shippingProgressFillEl = document.getElementById("cart-shipping-progress-fill");
+  const shippingProgressTextEl = document.getElementById("cart-shipping-progress-text");
+
+  function renderShippingProgress(summary) {
+    if (!shippingProgressEl) return;
+    if (summary.items.length === 0) {
+      shippingProgressEl.hidden = true;
+      return;
+    }
+    shippingProgressEl.hidden = false;
+    const percent = Math.min(100, (summary.subtotal / summary.threshold) * 100);
+    shippingProgressFillEl.style.width = percent + "%";
+    if (summary.shippingFree) {
+      shippingProgressEl.setAttribute("data-complete", "1");
+      shippingProgressTextEl.textContent = "Kostenloser Versand freigeschaltet";
+    } else {
+      shippingProgressEl.removeAttribute("data-complete");
+      const remaining = summary.threshold - summary.subtotal;
+      shippingProgressTextEl.textContent = `Noch ${formatPrice(remaining)} bis zum kostenlosen Versand`;
+    }
+  }
 
   function renderCart() {
     const summary = Cart.getSummary();
+    renderShippingProgress(summary);
     if (summary.items.length === 0) {
       cartItemsEl.innerHTML = `
         <div class="cart-empty">
@@ -319,6 +404,7 @@
     cartShippingEl.innerHTML = summary.shippingFree
       ? '<span class="value--free">Kostenlos</span>'
       : formatPrice(summary.shippingCost) + ` (ab ${formatPrice(summary.threshold)} kostenlos)`;
+    if (cartDeliveryEl) cartDeliveryEl.textContent = deliveryEstimateText(1, 3);
     cartTotalEl.textContent = formatPrice(summary.total);
   }
   renderCart();

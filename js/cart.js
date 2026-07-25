@@ -195,4 +195,76 @@
     return value.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
   }
   global.formatPrice = formatPrice;
+
+  /* -------------------- Liefertermin-Schätzung --------------------
+     Rechnet ab dem aktuellen Datum in echten Werktagen (Sa/So übersprungen),
+     keine erfundenen/optimistischen Zahlen — nutzt dieselbe Spanne (1-3 Werktage),
+     die auch in den Versand-Angaben genannt wird. */
+  function addBusinessDays(fromDate, days) {
+    const d = new Date(fromDate);
+    let added = 0;
+    while (added < days) {
+      d.setDate(d.getDate() + 1);
+      const day = d.getDay();
+      if (day !== 0 && day !== 6) added++;
+    }
+    return d;
+  }
+
+  function formatDeliveryDate(date) {
+    return date.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" });
+  }
+
+  function deliveryEstimateText(minDays, maxDays) {
+    const now = new Date();
+    const minDate = addBusinessDays(now, minDays);
+    const maxDate = addBusinessDays(now, maxDays);
+    if (minDate.toDateString() === maxDate.toDateString()) {
+      return formatDeliveryDate(minDate);
+    }
+    return formatDeliveryDate(minDate) + " – " + formatDeliveryDate(maxDate);
+  }
+  global.deliveryEstimateText = deliveryEstimateText;
+
+  /* -------------------- Kürzlich angesehen --------------------
+     Rein clientseitig (localStorage), nur echte, selbst besuchte Produkte —
+     keine simulierten/fremden Ansichten. */
+  const RECENTLY_VIEWED_KEY = "novashop_recently_viewed_v1";
+  const RECENTLY_VIEWED_MAX = 12;
+
+  function readRecentlyViewed() {
+    if (typeof localStorage === "undefined") return [];
+    const val = safeParseArray(localStorage.getItem(RECENTLY_VIEWED_KEY));
+    return Array.isArray(val) ? val : [];
+  }
+
+  function safeParseArray(json) {
+    try {
+      const val = JSON.parse(json);
+      return Array.isArray(val) ? val : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function trackRecentlyViewed(productId) {
+    if (typeof localStorage === "undefined" || !productId) return;
+    let ids = readRecentlyViewed().filter((id) => id !== productId);
+    ids.unshift(productId);
+    ids = ids.slice(0, RECENTLY_VIEWED_MAX);
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(ids));
+  }
+
+  function getRecentlyViewed(excludeId, limit) {
+    const ids = readRecentlyViewed().filter((id) => id !== excludeId);
+    const resolved = ids
+      .map((id) => (typeof getProductById === "function" ? getProductById(id) : null))
+      .filter((p) => p && p.active);
+    return typeof limit === "number" ? resolved.slice(0, limit) : resolved;
+  }
+
+  global.RecentlyViewed = {
+    track: trackRecentlyViewed,
+    getRecent: getRecentlyViewed,
+  };
 })(window);

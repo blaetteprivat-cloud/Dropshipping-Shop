@@ -403,6 +403,24 @@
 }
 .cart-empty .icon { width: 40px; height: 40px; color: var(--color-text-faint); }
 
+.cart-shipping-progress { display: flex; flex-direction: column; gap: 6px; margin-top: var(--space-1); }
+.cart-shipping-progress__bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-glass);
+  overflow: hidden;
+}
+.cart-shipping-progress__bar span {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--gradient-primary);
+  transition: width var(--duration-base) var(--ease-out);
+}
+.cart-shipping-progress[data-complete="1"] .cart-shipping-progress__bar span { background: var(--color-success); }
+.cart-shipping-progress p { font-size: 0.78rem; color: var(--color-text-muted); }
+.cart-shipping-progress[data-complete="1"] p { color: var(--color-success); font-weight: 600; }
+
 .cart-summary {
   border-top: 1px solid var(--color-border);
   padding-top: var(--space-4);
