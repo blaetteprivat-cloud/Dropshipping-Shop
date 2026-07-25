@@ -117,10 +117,30 @@ fest, bevor du zum ersten Mal hochlädst. Passe sie in `capacitor.config.json` (
      im Repo hat aktuell noch Platzhalter (`legal-todo`-Markierungen) für Firmendaten — **die
      müssen vor der Einreichung mit echten Angaben gefüllt und rechtlich geprüft sein**, Apple-
      Reviewer öffnen diesen Link aktiv.
-   - **App Privacy ("Datenschutz-Angaben")** — Fragebogen, welche Daten die App erhebt. Für
-     NovaShop ehrlich angeben: Name, E-Mail, Adresse (Bestellungen), ggf. Zahlungsinfos (laufen
-     aber über Stripe, nicht durch die App selbst gespeichert) — grob orientieren an dem, was
-     `server/routes/auth.js`/`checkout.js` tatsächlich speichern.
+   - **App Privacy ("Datenschutz-Angaben")** — Fragebogen, welche Daten die App erhebt. Konkrete
+     Ausfüllhilfe pro Apple-Kategorie, basiert auf dem, was `server/lib/store.js`
+     (Tabellen `users`/`orders`) tatsächlich speichert — nicht mehr und nicht weniger angeben:
+     - **Kontaktinfo → Name**: Ja, erhoben, mit Identität verknüpft (Konto-Login, Bestelladresse).
+     - **Kontaktinfo → E-Mail-Adresse**: Ja, erhoben, mit Identität verknüpft (Login, Bestätigungs-/
+       Bestellmails über Brevo).
+     - **Kontaktinfo → Postadresse**: Ja, erhoben, mit Identität verknüpft (Lieferadresse,
+       `address_json` in der `orders`-Tabelle).
+     - **Kontaktinfo → Telefonnummer**: Nein — es gibt kein Telefonfeld in Registrierung oder
+       Checkout (`server/routes/checkout.js` fragt nur Name/Straße/PLZ/Ort/Land ab).
+     - **Finanzinfo → Zahlungsinfo**: Nein / nicht zutreffend — Kartendaten laufen ausschließlich
+       über die von Stripe gehostete Checkout-Seite, die App/der Server sieht oder speichert
+       niemals die Kartennummer. Gespeichert wird nur eine Stripe-interne Referenz-ID
+       (`stripe_payment_intent_id`) sowie ein Zahlungsart-Text wie „card" — das zählt bei Apple
+       i. d. R. nicht als „Financial Info", weil kein tatsächliches Zahlungsmittel erhoben wird.
+     - **Identifikatoren → Nutzer-ID**: Ja, erhoben, mit Identität verknüpft (Konto-ID für Login/
+       Bestellhistorie).
+     - **Nutzungsdaten / Diagnose**: Nein — es gibt keine eingebaute Analytics-/Tracking-
+       Bibliothek, `morgan` loggt Requests nur in die Server-Konsole, nicht in eine
+       auswertbare Datenbank.
+     - **Verfolgung ("Tracking")**: Nein — keine geräteübergreifende Werbe-/Tracking-SDK
+       eingebunden, keine Datenweitergabe an Werbenetzwerke.
+     - **Zweck**: Für alle oben als „Ja" markierten Punkte „App-Funktionalität" auswählen
+       (Konto, Bestellabwicklung) — nicht „Analysen" oder „Werbung".
    - **Screenshots** — mindestens für ein 6,7"-Gerät (z. B. iPhone 15 Pro Max) Pflicht, weitere
      Größen optional aber empfohlen. Am einfachsten per Xcode-Simulator erzeugen.
    - **Altersfreigabe-Fragebogen**, **Export-Compliance** (reine HTTPS-Nutzung ohne eigene
