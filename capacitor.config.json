@@ -1,0 +1,20 @@
+{
+  "appId": "de.novashop.app",
+  "appName": "NovaShop",
+  "webDir": "www",
+  "server": {
+    "url": "https://REPLACE-WITH-DEINER-ECHTEN-DOMAIN.example",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0908",
+      "androidSplashResourceName": "splash"
+    }
+  }
+}

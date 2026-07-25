@@ -38,6 +38,12 @@ Standardmäßig läuft der Server auf `http://localhost:3000` (`PORT` in `.env` 
 seedet beim ersten Start automatisch 22 Demo-Produkte in die (sonst leere) SQLite-Datenbank
 unter `./data/novashop.sqlite`.
 
+Tests laufen mit dem eingebauten Node-Testrunner (keine zusätzliche Abhängigkeit nötig):
+
+```bash
+npm test
+```
+
 ## Umgebungsvariablen
 
 Vollständige Liste mit Erklärung in [`.env.example`](.env.example). Kurzfassung, was ohne
@@ -72,3 +78,8 @@ docker run -p 3000:3000 --env-file .env -v novashop-data:/app/data novashop
 ```
 
 Das Volume für `/app/data` ist nötig, damit die SQLite-Datenbank Container-Neustarts übersteht.
+
+## iOS-/Android-App
+
+Siehe [`MOBILE_APP.md`](MOBILE_APP.md) — das Repo ist mit [Capacitor](https://capacitorjs.com)
+für einen App-Store-/Play-Store-Build vorbereitet.

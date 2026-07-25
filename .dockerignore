@@ -4,3 +4,11 @@ data
 .git
 *.sqlite
 *.sqlite-journal
+test
+
+# Mobile-App-Wrapper (Capacitor) — nur für den iOS/Android-Build relevant, nicht für den Server
+www
+resources
+ios
+android
+capacitor.config.json
