@@ -7,3 +7,17 @@ node_modules/
 *.sqlite-wal
 npm-debug.log*
 server_boot.log
+
+# Capacitor iOS/Android — Projekt-Scaffolding selbst ist eingecheckt (siehe MOBILE_APP.md),
+# aber lokale Build-Artefakte/IDE-Zustand aus Xcode bzw. Android Studio nicht.
+android/local.properties
+android/.gradle/
+android/**/build/
+android/captures/
+ios/App/Pods/
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/*.xcodeproj/xcuserdata/
+ios/App/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/xcuserdata/
+*.xcuserstate
+DerivedData/

@@ -42,28 +42,37 @@ Du brauchst:
 Sobald das steht: trag die echte URL in `capacitor.config.json` unter `server.url` ein (ersetzt
 den Platzhalter `https://REPLACE-WITH-DEINER-ECHTEN-DOMAIN.example`).
 
-## Was in diesem Repo schon vorbereitet ist
+## Was in diesem Repo schon fertig vorbereitet ist
+
+Das Xcode- und Android-Studio-Projekt sind **schon erzeugt und eingecheckt** — das Scaffolding
+selbst (`npx cap add ios`/`android`) braucht zwar normalerweise Xcode bzw. Android Studio, aber
+nur zum *Bauen*, nicht zum reinen Anlegen der Projektdateien. Das lief bereits einmal komplett
+durch (auch die Icon-/Splash-Generierung), Ergebnis liegt fertig im Repo:
 
 - `capacitor.config.json` — App-ID (`de.novashop.app`, **vor dem ersten Upload unbedingt auf
   etwas ändern, das dir gehört**, siehe unten), App-Name, `server.url`-Platzhalter,
   `cleartext: false` (HTTPS-Pflicht).
-- `www/index.html` — minimaler Platzhalter, den Capacitor als Ordner braucht (wird durch den
-  `server.url`-Modus praktisch nicht angezeigt, nur eine technische Voraussetzung des Tools).
-- `resources/icon.svg` — App-Icon als Vektor-Master (1024×1024, exakt die bestehende
-  Bronze-Verlauf-„N"-Marke aus dem Favicon, ohne abgerundete Ecken/Transparenz — die legt
-  Apple/Google-Tooling selbst pro Plattform an).
-- `resources/splash.svg` — Splash-Screen-Master (2732×2732), dunkler Hintergrund passend zu
-  `--color-bg` aus `css/style.css`.
+- `ios/App/App.xcodeproj` — fertiges Xcode-Projekt, direkt mit `npx cap open ios` (oder manuell
+  in Xcode) zu öffnen. App-Icon + Splash-Screen sind bereits im Asset-Katalog
+  (`Assets.xcassets/AppIcon.appiconset`, `.../Splash.imageset`) eingetragen.
+- `android/` — fertiges Android-Studio-/Gradle-Projekt (`npx cap open android`), Adaptive Icons +
+  Splash-Screens (hell/dunkel, alle Dichten) liegen schon in `android/app/src/main/res/`.
+- `resources/icon.svg` + `icon.png`, `resources/splash.svg` + `splash.png` — die Vektor-/Raster-
+  Master (1024×1024 bzw. 2732×2732), exakt die bestehende Bronze-Verlauf-„N"-Marke aus dem
+  Favicon, ohne abgerundete Ecken/Transparenz (die legt Apple/Google-Tooling selbst pro Plattform
+  an). Falls du das Icon später änderst: `npm run cap:assets` regeneriert daraus alle
+  Plattform-Größen neu.
+- `manifest.json` + `img/icon-192.png`, `img/icon-512.png`, `img/apple-touch-icon.png`, verlinkt
+  in `index.html`/`shop.html`/`product.html`/`bestellung.html` — macht den Shop nebenbei auch als
+  installierbare PWA nutzbar (Android „Zum Startbildschirm hinzufügen" funktioniert damit schon
+  jetzt, unabhängig vom Capacitor-Weg).
 - `package.json` → `devDependencies`: `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`,
-  `@capacitor/android`, `@capacitor/assets` (Icon-/Splash-Generator).
-- `.dockerignore` ergänzt, damit `www/`, `resources/`, `ios/`, `android/` nicht ins Server-Docker-
-  Image wandern (die sind nur für den App-Build relevant).
+  `@capacitor/android`, `@capacitor/assets`. Scripts `npm run cap:sync` und `npm run cap:assets`.
+- `.gitignore`/`.dockerignore` ergänzt: lokale Xcode-/Gradle-Build-Artefakte (`xcuserdata`,
+  `local.properties`, `build/`-Ordner) werden nicht mitversioniert, `www/`, `resources/`, `ios/`,
+  `android/` wandern nicht ins Server-Docker-Image.
 
-Absichtlich **nicht** enthalten: die eigentlichen `ios/`- und `android/`-Ordner. Die erzeugt
-`npx cap add ios` bzw. `npx cap add android` — das braucht installiertes Xcode
-(nur macOS) bzw. Android Studio, deshalb kann ich das von hier aus nicht für dich ausführen.
-
-## Schritt für Schritt auf deinem Mac
+**Damit fehlt dir auf dem Mac nur noch:**
 
 ```bash
 # 1. Ins Projekt wechseln, Abhängigkeiten installieren
@@ -71,29 +80,18 @@ cd /pfad/zu/Dropshipping-Shop
 npm install
 
 # 2. capacitor.config.json öffnen und server.url auf deine echte Domain setzen,
-#    z. B. "https://shop.deine-domain.de"
-
-# 3. Bundle-ID final festlegen (siehe Abschnitt unten), dann in capacitor.config.json
-#    unter "appId" eintragen — DANACH NICHT MEHR ÄNDERN (siehe Warnung unten)
-
-# 4. Icons/Splash aus den SVG-Quellen erzeugen
-#    (ImageMagick oder ein Online-Konverter reicht, um icon.svg -> icon.png @1024x1024
-#    und splash.svg -> splash.png @2732x2732 zu exportieren; z.B.:)
-brew install imagemagick   # falls noch nicht vorhanden
-magick resources/icon.svg -resize 1024x1024 resources/icon.png
-magick resources/splash.svg -resize 2732x2732 resources/splash.png
-
-npx @capacitor/assets generate --iconBackgroundColor '#9c7a52' --splashBackgroundColor '#0a0908'
-
-# 5. Native Projekte erzeugen
-npx cap init   # falls noch nicht automatisch aus capacitor.config.json übernommen
-npx cap add ios
-npx cap add android
+#    z. B. "https://shop.deine-domain.de", dann:
 npx cap sync
 
-# 6. In Xcode öffnen
+# 3. Bundle-ID final festlegen (siehe Abschnitt unten) BEVOR du zum ersten Mal hochlädst,
+#    dann in capacitor.config.json unter "appId" eintragen, danach wieder npx cap sync
+
+# 4. In Xcode öffnen
 npx cap open ios
 ```
+
+`npx cap add ios`/`android` musst du nur erneut ausführen, falls du die `ios/`- oder
+`android/`-Ordner mal komplett löschst/neu aufsetzen willst — im Normalfall reicht `cap sync`.
 
 ## Bundle-ID / App-ID wählen
 

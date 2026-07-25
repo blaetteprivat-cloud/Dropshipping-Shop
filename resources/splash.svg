@@ -5,7 +5,7 @@
       <stop offset="1" stop-color="#c2a06c"/>
     </linearGradient>
   </defs>
-  <!-- Dunkler Hintergrund passend zu --color-bg (#0a0908) aus css/style.css, damit der
+  <!-- Dunkler Hintergrund passend zur Variable color-bg (#0a0908) aus css/style.css, damit der
        native Splash-Screen nahtlos in die App überblendet statt als heller Blitz aufzufallen. -->
   <rect width="2732" height="2732" fill="#0a0908"/>
   <rect x="1066" y="1066" width="600" height="600" rx="140" fill="url(#g)"/>

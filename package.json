@@ -8,7 +8,9 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "seed-admin": "node scripts/seed-admin.js",
-    "test": "node --test"
+    "test": "node --test",
+    "cap:sync": "cap sync",
+    "cap:assets": "capacitor-assets generate --assetPath resources --iconBackgroundColor '#9c7a52' --iconBackgroundColorDark '#9c7a52' --splashBackgroundColor '#0a0908' --splashBackgroundColorDark '#0a0908'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
