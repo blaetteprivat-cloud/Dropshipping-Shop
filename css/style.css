@@ -551,7 +551,7 @@ html { scroll-behavior: smooth; }
   transition: color var(--duration-base) var(--ease-out);
 }
 .footer ul a:hover, .footer__link-btn:hover { color: var(--color-text); }
-.footer__link-btn { text-align: left; font: inherit; cursor: pointer; }
+.footer__link-btn { text-align: left; font: inherit; cursor: pointer; padding: 0; margin: 0; }
 .footer__bottom {
   margin-top: var(--space-7);
   padding-top: var(--space-5);
@@ -765,7 +765,10 @@ html { scroll-behavior: smooth; }
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-xl);
-  padding: var(--space-7) var(--space-6) var(--space-6);
+  /* Oben mehr Abstand als seitlich/unten: der 44x44px .modal__close-Button (top: space-4,
+     44px hoch) reicht sonst bis 60px von oben und überlappt den ersten Inhalt (z.B. die
+     Anmelden/Registrieren-Tabs), der bei alleinigem space-7-Padding schon bei 48px beginnt. */
+  padding: var(--space-8) var(--space-6) var(--space-6);
   transform: translateY(16px) scale(0.97);
   opacity: 0;
   transition: transform var(--duration-slow) var(--ease-out), opacity var(--duration-slow) var(--ease-out);
