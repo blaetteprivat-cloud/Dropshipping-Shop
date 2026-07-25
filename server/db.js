@@ -87,6 +87,18 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 `);
 
+/* Migration für bestehende DBs: CREATE TABLE IF NOT EXISTS legt neue Spalten nicht in
+   bereits existierenden Tabellen an. Tabellen-/Spaltennamen sind feste Konstanten hier
+   im Code, nie Nutzereingaben — String-Interpolation in die DDL ist daher unbedenklich. */
+function ensureColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+ensureColumn("users", "reset_token", "TEXT");
+ensureColumn("users", "reset_token_expires", "TEXT");
+
 function seedProductsIfEmpty() {
   const { count } = db.prepare("SELECT COUNT(*) AS count FROM products").get();
   if (count > 0) return;

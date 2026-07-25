@@ -25,6 +25,17 @@ const Users = {
   markVerified(id) {
     db.prepare("UPDATE users SET verified = 1, verification_token = NULL, verification_token_expires = NULL WHERE id = ?").run(id);
   },
+  setResetToken(id, token, expiresAt) {
+    db.prepare("UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?").run(token, expiresAt, id);
+  },
+  /* Setzt das Passwort neu und invalidiert den Reset-Token sofort (Einmal-Nutzung) sowie alle
+     anderen laufenden Sessions ist hier bewusst NICHT Teil der Funktion — express-session kennt
+     keine "alle Sessions eines Users killen"-Query ohne user_id-Spalte im Session-Store; das neue
+     Passwort allein reicht als Schutz, ein bereits eingeloggter Angreifer hätte den Token ohnehin
+     nicht gebraucht. */
+  setPassword(id, passwordHash) {
+    db.prepare("UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?").run(passwordHash, id);
+  },
   listAll() {
     return db.prepare("SELECT id, name, email, role, verified, created_at FROM users WHERE role = 'customer' ORDER BY created_at DESC").all();
   },
@@ -130,6 +141,12 @@ const Products = {
   },
   decrementStock(id, qty) {
     db.prepare("UPDATE products SET stock = MAX(0, stock - ?), updated_at = datetime('now') WHERE id = ?").run(qty, id);
+  },
+  /* Gegenstück zu decrementStock — gibt reservierten Lagerbestand zurück, wenn eine Reservierung
+     (siehe Orders.create) storniert wird (Stripe-Session-Erstellung fehlgeschlagen, Session
+     abgelaufen, Zahlung fehlgeschlagen). */
+  restoreStock(id, qty) {
+    db.prepare("UPDATE products SET stock = stock + ?, updated_at = datetime('now') WHERE id = ?").run(qty, id);
   },
 };
 
@@ -244,6 +261,16 @@ const Orders = {
   },
   listAll() {
     const rows = db.prepare("SELECT id FROM orders ORDER BY created_at DESC").all();
+    return rows.map((r) => Orders.findById(r.id));
+  },
+  /* Findet "Zahlung ausstehend"-Bestellungen, deren Stripe-Checkout-Session längst abgelaufen sein
+     muss (siehe SESSION_EXPIRY_MINUTES in checkout.js), aber nie ein "checkout.session.expired"-
+     Webhook ankam (z. B. weil STRIPE_WEBHOOK_SECRET fehlt) — Fallback für den periodischen
+     Reservierungs-Sweep in index.js, damit reservierter Lagerbestand nicht für immer blockiert bleibt. */
+  listStalePending(minutesOld) {
+    const rows = db
+      .prepare(`SELECT id FROM orders WHERE status = ? AND created_at < datetime('now', ?)`)
+      .all(ORDER_STATUS.PENDING, `-${minutesOld} minutes`);
     return rows.map((r) => Orders.findById(r.id));
   },
 };

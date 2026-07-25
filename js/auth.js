@@ -82,6 +82,18 @@
     return result;
   }
 
+  async function forgotPassword(email) {
+    return api("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+  }
+
+  async function resetPassword({ email, token, password }) {
+    const result = await api("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ email, token, password }) });
+    cache.user = result.user;
+    await Promise.all([refreshOrders(), refreshNotifications()]);
+    notifyAuthChange();
+    return result;
+  }
+
   async function login({ email, password }) {
     const result = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
     cache.user = result.user;
@@ -146,6 +158,8 @@
     logout,
     verifyEmail,
     resendVerification,
+    forgotPassword,
+    resetPassword,
     getCurrentUser,
     getOrders,
     getNotifications,

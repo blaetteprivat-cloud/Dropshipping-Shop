@@ -35,6 +35,18 @@ async function sendVerificationEmail(user, token) {
   return sendTransactionalEmail({ to: user.email, toName: user.name, subject: "Bitte bestätige deine E-Mail-Adresse", html });
 }
 
+async function sendPasswordResetEmail(user, token) {
+  const link = `${baseUrl()}/reset-password.html?email=${encodeURIComponent(user.email)}&token=${encodeURIComponent(token)}`;
+  const html = wrapEmail("Passwort zurücksetzen", `
+    <p>Hallo ${escapeHtml(user.name)},</p>
+    <p>du hast angefragt, dein NovaShop-Passwort zurückzusetzen. Klicke auf den folgenden Button, um ein neues Passwort zu vergeben:</p>
+    <p><a href="${link}" style="display:inline-block;background:#9c7a52;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;">Neues Passwort vergeben</a></p>
+    <p style="font-size:13px;color:#5c574d;">Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:<br>${link}</p>
+    <p style="font-size:13px;color:#5c574d;">Der Link ist eine Stunde gültig. Falls du das nicht warst, kannst du diese Nachricht ignorieren — dein Passwort bleibt unverändert.</p>
+  `);
+  return sendTransactionalEmail({ to: user.email, toName: user.name, subject: "Passwort zurücksetzen", html });
+}
+
 async function sendOrderConfirmationEmail(order, toEmail, toName) {
   const itemsHtml = order.items
     .map((it) => `<tr><td style="padding:4px 0;">${it.qty}× ${escapeHtml(it.name)}</td><td style="padding:4px 0;text-align:right;">${formatEuro(it.price * it.qty)}</td></tr>`)
@@ -51,4 +63,4 @@ async function sendOrderConfirmationEmail(order, toEmail, toName) {
   return sendTransactionalEmail({ to: toEmail, toName, subject: `Bestellbestätigung ${order.orderNumber}`, html });
 }
 
-module.exports = { sendVerificationEmail, sendOrderConfirmationEmail };
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendOrderConfirmationEmail };

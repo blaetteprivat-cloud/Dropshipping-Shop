@@ -32,6 +32,7 @@
               </button>
             </span>
           </label>
+          <button type="button" class="auth-modal__forgot" id="forgot-password-trigger">Passwort vergessen?</button>
           <p class="form-error" id="login-error" role="alert"></p>
           <button class="btn btn-primary btn-block" type="submit">Anmelden</button>
         </form>
@@ -78,6 +79,20 @@
         <p class="auth-form__sub" id="verify-pending-message">Wir haben eine Bestätigungsmail an <strong id="verify-pending-email"></strong> geschickt. Bitte klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.</p>
         <p class="auth-modal__note">Keine E-Mail erhalten? Prüfe auch deinen Spam-Ordner. Ein neuer Bestätigungslink wird automatisch angefordert, sobald du dich erneut anzumelden versuchst.</p>
         <button class="btn btn-ghost btn-block" type="button" id="verify-pending-back">Zurück zur Anmeldung</button>
+      </div>
+
+      <div id="auth-view-forgot" hidden>
+        <h2>Passwort vergessen?</h2>
+        <p class="auth-form__sub">Gib deine E-Mail-Adresse ein — falls ein Konto existiert, senden wir dir einen Link zum Zurücksetzen.</p>
+        <form id="forgot-password-form" class="auth-form" novalidate>
+          <label for="forgot-password-email">E-Mail-Adresse
+            <input type="email" id="forgot-password-email" name="email" required autocomplete="email" placeholder="deine@email.de">
+          </label>
+          <p class="form-error" id="forgot-password-error" role="alert"></p>
+          <button class="btn btn-primary btn-block" type="submit">Link anfordern</button>
+        </form>
+        <p class="auth-form__sub" id="forgot-password-success" hidden>Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir einen Link zum Zurücksetzen des Passworts gesendet. Bitte prüfe auch deinen Spam-Ordner.</p>
+        <button class="btn btn-ghost btn-block" type="button" id="forgot-password-back">Zurück zur Anmeldung</button>
       </div>
 
       <div id="auth-view-account" hidden>
@@ -137,6 +152,7 @@
   const closeBtn = document.getElementById("auth-modal-close");
   const guestView = document.getElementById("auth-view-guest");
   const verifyPendingView = document.getElementById("auth-view-verify-pending");
+  const forgotView = document.getElementById("auth-view-forgot");
   const accountView = document.getElementById("auth-view-account");
   const loginForm = document.getElementById("login-form");
   const registerForm = document.getElementById("register-form");
@@ -158,7 +174,7 @@
     document.body.style.overflow = "";
     loginError.textContent = "";
     registerError.textContent = "";
-    if (!verifyPendingView.hidden) resetToLoginTab();
+    if (!verifyPendingView.hidden || !forgotView.hidden) resetToLoginTab();
     resetDeleteAccountForm();
     if (lastFocusedEl) lastFocusedEl.focus();
   }
@@ -196,6 +212,46 @@
       toggle.setAttribute("aria-pressed", String(show));
       toggle.setAttribute("aria-label", show ? "Passwort verbergen" : "Passwort anzeigen");
     });
+  });
+
+  /* -------------------- Passwort vergessen -------------------- */
+  const forgotForm = document.getElementById("forgot-password-form");
+  const forgotError = document.getElementById("forgot-password-error");
+  const forgotSuccess = document.getElementById("forgot-password-success");
+
+  function showForgotView() {
+    guestView.hidden = true;
+    verifyPendingView.hidden = true;
+    accountView.hidden = true;
+    forgotView.hidden = false;
+    forgotForm.hidden = false;
+    forgotSuccess.hidden = true;
+    forgotError.textContent = "";
+    forgotForm.reset();
+    setTimeout(() => document.getElementById("forgot-password-email").focus(), 50);
+  }
+
+  document.getElementById("forgot-password-trigger").addEventListener("click", showForgotView);
+  document.getElementById("forgot-password-back").addEventListener("click", () => {
+    resetToLoginTab();
+    renderAuthState();
+  });
+
+  forgotForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    forgotError.textContent = "";
+    const email = document.getElementById("forgot-password-email").value.trim();
+    const submitBtn = forgotForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await Auth.forgotPassword(email);
+      forgotForm.hidden = true;
+      forgotSuccess.hidden = false;
+    } catch (err) {
+      forgotError.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 
   /* -------------------- "Bitte E-Mail bestätigen"-Hinweis -------------------- */
@@ -294,6 +350,7 @@
     loginForm.hidden = false;
     registerForm.hidden = true;
     verifyPendingView.hidden = true;
+    forgotView.hidden = true;
   }
 
   document.getElementById("logout-btn").addEventListener("click", () => {
@@ -466,7 +523,7 @@
       document.getElementById("account-email").textContent = user.email;
       renderNotifications(user);
       renderOrders(user);
-    } else if (verifyPendingView.hidden) {
+    } else if (verifyPendingView.hidden && forgotView.hidden) {
       guestView.hidden = false;
       accountView.hidden = true;
     }

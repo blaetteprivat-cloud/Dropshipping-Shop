@@ -2,12 +2,13 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { Users, Orders, Notifications } = require("../lib/store");
 const { currentUser, requireCustomer, publicUser } = require("../middleware/auth");
-const { sendVerificationEmail } = require("../lib/mailer");
+const { sendVerificationEmail, sendPasswordResetEmail } = require("../lib/mailer");
 
 const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 function logDevVerifyLink(email, token, err) {
   if (err && err.code === "BREVO_NOT_CONFIGURED") {
@@ -84,6 +85,61 @@ router.post("/verify", (req, res) => {
   Users.markVerified(user.id);
   req.session.userId = user.id;
   res.json({ alreadyVerified: false, user: publicUser(user) });
+});
+
+function logDevResetLink(email, token, err) {
+  if (err && err.code === "BREVO_NOT_CONFIGURED") {
+    const link = `${(process.env.APP_BASE_URL || "http://localhost:3000").replace(/\/$/, "")}/reset-password.html?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+    console.warn(`[Brevo nicht konfiguriert] Passwort-Reset-Link für ${email}:\n  ${link}`);
+    return true;
+  }
+  console.error("Passwort-Reset-Mail konnte nicht gesendet werden:", err);
+  return false;
+}
+
+/* Antwortet immer mit derselben generischen Nachricht, egal ob ein Konto mit dieser E-Mail
+   existiert — sonst ließe sich über den Response-Unterschied durchprobieren, welche
+   E-Mail-Adressen registriert sind (User-Enumeration). */
+router.post("/forgot-password", async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const genericResponse = { ok: true, message: "Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir einen Link zum Zurücksetzen des Passworts gesendet." };
+  if (!EMAIL_RE.test(email)) return res.json(genericResponse);
+
+  const user = Users.findByEmail(email);
+  if (!user || user.role !== "customer") return res.json(genericResponse);
+
+  const token = Users.generateToken();
+  const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString();
+  Users.setResetToken(user.id, token, expires);
+
+  try {
+    await sendPasswordResetEmail(user, token);
+  } catch (err) {
+    logDevResetLink(email, token, err);
+  }
+
+  res.json(genericResponse);
+});
+
+router.post("/reset-password", async (req, res) => {
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const token = String(req.body.token || "");
+  const password = String(req.body.password || "");
+
+  if (password.length < 6) return res.status(400).json({ error: "Das Passwort muss mindestens 6 Zeichen lang sein." });
+
+  const user = Users.findByEmail(email);
+  if (!user || user.role !== "customer" || !token || token !== user.reset_token) {
+    return res.status(400).json({ error: "Der Link zum Zurücksetzen ist ungültig oder abgelaufen." });
+  }
+  if (user.reset_token_expires && new Date(user.reset_token_expires).getTime() < Date.now()) {
+    return res.status(400).json({ error: "Der Link zum Zurücksetzen ist abgelaufen. Bitte fordere einen neuen an." });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  Users.setPassword(user.id, passwordHash);
+  req.session.userId = user.id;
+  res.json({ user: publicUser(user) });
 });
 
 router.post("/login", async (req, res) => {
