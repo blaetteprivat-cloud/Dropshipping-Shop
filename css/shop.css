@@ -365,6 +365,7 @@
   border: 1px solid var(--color-border);
 }
 .qty-control button {
+  position: relative;
   width: 36px; height: 36px;
   border-radius: var(--radius-full);
   display: flex; align-items: center; justify-content: center;
@@ -374,8 +375,22 @@
 .qty-control button:hover { background: var(--color-glass-strong); color: var(--color-text); }
 .qty-control button .icon { width: 13px; height: 13px; }
 .qty-control__value { min-width: 20px; text-align: center; font-size: 0.85rem; font-weight: 700; }
-.cart-item__remove { color: var(--color-text-faint); transition: color var(--duration-base) var(--ease-out); }
+.cart-item__remove {
+  position: relative;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-faint);
+  transition: color var(--duration-base) var(--ease-out);
+}
 .cart-item__remove:hover { color: var(--color-danger); }
+/* Der Tippbereich bleibt unsichtbar auf 44x44px erweitert (WCAG/Apple-HIG-Mindestmaß für Touch-
+   Targets), ohne die kompakte 36px-Optik der Warenkorbzeile zu verändern. */
+.qty-control button::before,
+.cart-item__remove::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
 
 .cart-empty {
   display: flex;
