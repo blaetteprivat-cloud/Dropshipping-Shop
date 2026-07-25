@@ -8,6 +8,7 @@ const SqliteStoreFactory = require("better-sqlite3-session-store");
 const rateLimit = require("express-rate-limit");
 const db = require("./db");
 const { renderStaticPage } = require("./lib/render-static");
+const { expireStaleOrders } = require("./lib/fulfill-order");
 
 /* Laute Boot-Warnungen statt stiller Fallbacks — beide Fälle sind sonst erst bemerkbar,
    wenn schon Bestellungen oder Sessions betroffen sind. */
@@ -79,7 +80,23 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Interner Serverfehler." });
 });
 
+/* Räumt "Zahlung ausstehend"-Bestellungen auf, deren Stripe-Checkout-Session (Ablaufzeit siehe
+   SESSION_EXPIRY_MINUTES in routes/checkout.js) längst abgelaufen sein muss, aber nie ein
+   "checkout.session.expired"-Webhook ankam — sonst bliebe der dafür reservierte Lagerbestand für
+   immer blockiert. STALE_ORDER_MINUTES liegt bewusst über der Session-Ablaufzeit als Puffer. */
+const STALE_ORDER_MINUTES = 55;
+function runStaleOrderSweep() {
+  try {
+    const expired = expireStaleOrders(STALE_ORDER_MINUTES);
+    if (expired > 0) console.log(`${expired} verwaiste "Zahlung ausstehend"-Bestellung(en) abgelaufen, Lagerbestand freigegeben.`);
+  } catch (err) {
+    console.error("Fehler beim Aufräumen verwaister Bestellungen:", err);
+  }
+}
+setInterval(runStaleOrderSweep, 15 * 60 * 1000);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`NovaShop-Server läuft auf http://localhost:${PORT}`);
+  runStaleOrderSweep();
 });

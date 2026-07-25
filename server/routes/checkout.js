@@ -12,6 +12,11 @@ const ZIP_RE = /^\d{4,5}$/;
 const COUNTRIES = ["DE", "AT", "CH"];
 const FREE_SHIPPING_THRESHOLD = 49;
 const SHIPPING_COST = 4.99;
+/* Wie lange eine Stripe-Checkout-Session (und die dafür reservierte Lagerbestand-Menge, siehe
+   unten) maximal offen bleibt, bevor Stripe sie selbst als abgelaufen markiert. Muss zwischen 30
+   und 1440 Minuten liegen (Stripe-Vorgabe). Der Aufräum-Sweep in server/index.js verwendet einen
+   Puffer oberhalb dieses Werts, falls der "checkout.session.expired"-Webhook nie ankommt. */
+const SESSION_EXPIRY_MINUTES = 40;
 
 router.post("/create-session", async (req, res, next) => {
   try {
@@ -54,9 +59,9 @@ router.post("/create-session", async (req, res, next) => {
     const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
     const total = subtotal + shippingCost;
 
-    /* getStripe() zuerst aufrufen (vor Orders.create()): wenn Stripe nicht
-       konfiguriert ist, soll erst gar keine Bestellung angelegt werden — sonst
-       bleibt bei jedem Checkout-Versuch ohne Stripe-Key eine für immer
+    /* getStripe() zuerst aufrufen (vor jeder Lagerbestand-Reservierung/Orders.create()): wenn
+       Stripe nicht konfiguriert ist, soll erst gar keine Bestellung angelegt und kein Lagerbestand
+       reserviert werden — sonst bleibt bei jedem Checkout-Versuch ohne Stripe-Key eine für immer
        "Zahlung ausstehend"-Karteileiche in der DB zurück. */
     const stripe = getStripe();
     const lineItems = items.map((it) => ({
@@ -69,6 +74,14 @@ router.post("/create-session", async (req, res, next) => {
         quantity: 1,
       });
     }
+
+    /* Lagerbestand ab hier reservieren (statt erst bei Zahlungseingang, siehe fulfill-order.js) —
+       sonst könnten zwei Kunden gleichzeitig das letzte Stück kaufen und einer bezahlt für nicht
+       vorhandene Ware. Zwischen der Bestandsprüfung oben und hier liegt kein `await`, better-
+       sqlite3 ist synchron und Node einfädig: kein anderer Request kann dazwischen denselben
+       Bestand reservieren. Reservierungen ohne Zahlung werden über die Stripe-Session-Ablaufzeit
+       unten (SESSION_EXPIRY_MINUTES) plus den Aufräum-Sweep in server/index.js wieder freigegeben. */
+    for (const it of items) Products.decrementStock(it.id, it.qty);
 
     const order = Orders.create({
       userId: user ? user.id : null,
@@ -91,10 +104,13 @@ router.post("/create-session", async (req, res, next) => {
         success_url: `${baseUrl}/order-success.html?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/shop.html`,
         metadata: { orderId: String(order.id), orderNumber: order.orderNumber },
+        expires_at: Math.floor(Date.now() / 1000) + SESSION_EXPIRY_MINUTES * 60,
       });
     } catch (stripeErr) {
       /* Stripe hat die Session-Erstellung abgelehnt (z.B. ungültiger Key, Netzwerkfehler) —
-         die gerade angelegte Order wieder entfernen statt sie als Datenmüll liegen zu lassen. */
+         die gerade angelegte Order und die eben reservierte Menge wieder freigeben, statt sie
+         als Datenmüll bzw. blockierten Lagerbestand liegen zu lassen. */
+      for (const it of items) Products.restoreStock(it.id, it.qty);
       Orders.delete(order.id);
       throw stripeErr;
     }
@@ -124,6 +140,9 @@ router.get("/session/:sessionId", async (req, res) => {
       const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
       if (session.payment_status === "paid") {
         order = await fulfillPaidOrder(order, session);
+      } else if (session.status === "expired" && Orders.markFailed(order.id)) {
+        for (const item of order.items) Products.restoreStock(item.id, item.qty);
+        order = Orders.findById(order.id);
       }
     } catch (err) {
       console.error("Live-Abgleich mit Stripe fehlgeschlagen:", err);

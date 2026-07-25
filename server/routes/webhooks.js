@@ -1,5 +1,5 @@
 const express = require("express");
-const { Orders } = require("../lib/store");
+const { Orders, Products } = require("../lib/store");
 const { getStripe } = require("../lib/stripe");
 const { fulfillPaidOrder } = require("../lib/fulfill-order");
 
@@ -30,7 +30,9 @@ router.post("/", async (req, res) => {
     } else if (event.type === "checkout.session.expired") {
       const session = event.data.object;
       const order = Orders.findByStripeSessionId(session.id);
-      if (order) Orders.markFailed(order.id);
+      if (order && Orders.markFailed(order.id)) {
+        for (const item of order.items) Products.restoreStock(item.id, item.qty);
+      }
     }
     res.json({ received: true });
   } catch (err) {

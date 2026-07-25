@@ -241,11 +241,17 @@ const Orders = {
   delete(orderId) {
     db.prepare("DELETE FROM orders WHERE id = ?").run(orderId);
   },
+  /* Gibt zurück, ob die Bestellung tatsächlich von PENDING auf FAILED wechselte (true) oder
+     bereits einen anderen Status hatte (false) — das WHERE status=PENDING macht den Übergang
+     atomar auf DB-Ebene, der Rückgabewert lässt Aufrufer daran die Lagerbestand-Freigabe
+     gefahrlos genau einmal ausführen, auch wenn mehrere Quellen (Webhook, Live-Abgleich,
+     Aufräum-Sweep) gleichzeitig oder mehrfach für dieselbe Bestellung aufgerufen werden. */
   markFailed(orderId) {
-    db.prepare(`
+    const info = db.prepare(`
       UPDATE orders SET status = ?, updated_at = datetime('now')
       WHERE id = ? AND status = ?
     `).run(ORDER_STATUS.FAILED, orderId, ORDER_STATUS.PENDING);
+    return info.changes > 0;
   },
   updateStatus(orderId, status) {
     db.prepare("UPDATE orders SET status = ?, updated_at = datetime('now') WHERE id = ?").run(status, orderId);
