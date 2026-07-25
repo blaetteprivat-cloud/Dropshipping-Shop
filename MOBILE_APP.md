@@ -167,6 +167,46 @@ Deutlich schneller und günstiger als iOS, gleicher Codepfad:
    ausfüllen, `.aab`-Datei hochladen.
 4. Review bei Google ist in der Regel deutlich schneller und weniger streng als bei Apple.
 
+## Store-Texte (Entwurf, direkt einsetzbar)
+
+Basiert 1:1 auf den bestehenden Texten aus `index.html`/`shop.html` (keine neuen, unbelegten
+Werbeaussagen). Zeichenlängen unten sind bereits gegen die aktuellen Limits geprüft
+(Untertitel 24/30, Kurzbeschreibung 79/80, Werbetext 142/170, Keywords 82/100) — Apple/Google
+ändern diese Grenzen gelegentlich, im Zweifel im jeweiligen Eingabefeld selbst nachsehen.
+
+**App-Name** (beide Stores, ≤30 Zeichen): `NovaShop`
+
+**Untertitel** (App Store, ≤30 Zeichen): `Tech, Gaming & Lifestyle`
+
+**Kurzbeschreibung** (Google Play, ≤80 Zeichen):
+`Elektronik, Gaming & Lifestyle — kostenloser Versand ab 49 €, 30 Tage Rückgabe.`
+
+**Werbetext** (App Store „Promotional Text", ≤170 Zeichen, jederzeit ohne neuen Review änderbar):
+`Kuratierte Elektronik-, Gaming- und Lifestyle-Produkte zu fairen Preisen. Kostenloser Versand ab 49 €, sichere Zahlung, 30 Tage Rückgaberecht.`
+
+**Beschreibung** (beide Stores):
+```
+NovaShop — kuratierte Elektronik, Gaming- und Lifestyle-Produkte zu fairen Preisen.
+
+Entdecke unser Sortiment: Elektronik, Gaming, Zubehör, Kleidung, Home & Living, Beauty,
+Sport, Spielzeug sowie Büro & Schule.
+
+• Kostenloser Versand ab 49 € Bestellwert
+• Sichere Zahlung über Stripe
+• 30 Tage Rückgaberecht
+• Bestellungen jederzeit im eigenen Konto einsehbar
+• Bestellstatus auch ohne Konto per Bestellnummer + E-Mail abrufbar
+
+Konto erstellen, stöbern, bestellen — direkt aus der App.
+```
+
+**Schlüsselwörter** (App Store „Keywords"-Feld, ≤100 Zeichen, kommagetrennt ohne Leerzeichen,
+Wörter aus Name/Untertitel nicht wiederholen — die zählen dort schon automatisch mit):
+`gadgets,gaming,zubehoer,technik,lifestyle,deals,bestellen,onlineshop,shopping,tech`
+
+**Kategorie**: App Store „Shopping" (primär), optional „Lifestyle" (sekundär). Google Play
+„Shopping".
+
 ## Danach: laufende Aktualisierungen
 
 Solange sich nur `index.html`/`shop.html`/`js/*.js`/`css/*.css` etc. auf dem Server ändern,
